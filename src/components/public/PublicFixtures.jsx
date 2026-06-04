@@ -182,14 +182,20 @@ function PublicFixtures({
                             if (!item) return;
                             const name = typeof item === 'object' && item !== null ? item.name : item;
                             const isOg = typeof item === 'object' && item !== null ? !!item.isOwnGoal : false;
+                            const gender = typeof item === 'object' && item !== null ? item.gender || 'Men' : 'Men';
                             if (isOg) {
                               ogs.push(`${name} (OG)`);
                             } else {
-                              counts[name] = (counts[name] || 0) + 1;
+                              const key = `${name}_${gender}`;
+                              counts[key] = (counts[key] || 0) + 1;
                             }
                           });
-                          const regularList = Object.entries(counts).map(([name, count]) => {
-                            return count > 1 ? `${name} (${count})` : name;
+                          const regularList = Object.entries(counts).map(([key, count]) => {
+                            const idx = key.lastIndexOf('_');
+                            const name = key.substring(0, idx);
+                            const gender = key.substring(idx + 1);
+                            const symbol = gender === 'Women' ? '♀' : '♂';
+                            return `${name} ${count > 1 ? `(${count})` : ''} ${symbol}`;
                           });
                           return [...regularList, ...ogs].join(', ');
                         };
