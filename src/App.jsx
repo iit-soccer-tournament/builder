@@ -1212,16 +1212,17 @@ function App() {
                 </button>
                 <button
                   onClick={handleRollbackChanges}
-                  disabled={saveStatus === 'saving'}
+                  disabled={saveStatus === 'saving' || saveStatus === 'saved'}
                   style={{
-                    background: '#dc2626',
+                    background: saveStatus === 'saved' ? '#475569' : '#dc2626',
                     color: '#ffffff',
-                    border: '1px solid #991b1b',
-                    cursor: saveStatus === 'saving' ? 'not-allowed' : 'pointer',
+                    border: saveStatus === 'saved' ? '1px solid #334155' : '1px solid #991b1b',
+                    cursor: saveStatus === 'saving' || saveStatus === 'saved' ? 'not-allowed' : 'pointer',
                     padding: '8px 16px',
                     borderRadius: '6px',
                     fontWeight: 'bold',
-                    fontSize: '13px'
+                    fontSize: '13px',
+                    opacity: saveStatus === 'saved' ? 0.6 : 1
                   }}
                 >
                   ↩ Rollback Draft
