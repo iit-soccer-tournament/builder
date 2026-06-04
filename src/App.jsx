@@ -80,7 +80,11 @@ function App() {
 
   // UI state
   const [isBuilder, setIsBuilder] = useState(isBuilderAvailable); // App starts in Builder Mode if available
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace('#/', '').replace('#', '');
+    const validTabs = ['home', 'fixtures', 'scorers', 'drunk', 'rules', 'history'];
+    return validTabs.includes(hash) ? hash : 'home';
+  });
   const [selectedRoundFilter, setSelectedRoundFilter] = useState('All');
   const [selectedTeamFilter, setSelectedTeamFilter] = useState(null);
 
