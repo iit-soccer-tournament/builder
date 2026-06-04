@@ -816,20 +816,22 @@ function App() {
       
       if (gErr) throw gErr;
 
-      // Save active season detailed doc
-      const activeSeason = updatedEditions[activeEditionYear];
-      if (activeSeason) {
-        const dbSeasonCopy = { ...activeSeason };
-        delete dbSeasonCopy.scorers;
-        
-        const { error: sErr } = await supabase
-          .from('tournament_seasons')
-          .upsert({
-            year: activeEditionYear,
-            data: dbSeasonCopy
-          });
+      // Save all seasons detailed docs
+      for (const yr of Object.keys(updatedEditions)) {
+        const season = updatedEditions[yr];
+        if (season) {
+          const dbSeasonCopy = { ...season };
+          delete dbSeasonCopy.scorers;
           
-        if (sErr) throw sErr;
+          const { error: sErr } = await supabase
+            .from('tournament_seasons')
+            .upsert({
+              year: parseInt(yr, 10),
+              data: dbSeasonCopy
+            });
+            
+          if (sErr) throw sErr;
+        }
       }
 
       const snapshot = JSON.stringify({
