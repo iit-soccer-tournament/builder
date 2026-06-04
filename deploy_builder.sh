@@ -10,7 +10,7 @@ echo "Step 2: Publishing to gh-pages branch..."
 cd dist
 git init
 git branch -m gh-pages
-git remote add origin https://github.com/iit-soccer-tournament/builder.git
+git remote set-url origin https://github.com/iit-soccer-tournament/builder.git || git remote add origin https://github.com/iit-soccer-tournament/builder.git
 git add .
 git commit -m "Deploy builder workspace"
 git push -f origin gh-pages
