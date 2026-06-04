@@ -136,18 +136,21 @@ function App() {
             const sList = basicData.seasons_list || {};
             setSeasonsList(sList);
 
-            // Fetch active season
-            const { data: seasonData } = await supabase
+            // Fetch all seasons
+            const { data: allSeasonsData } = await supabase
               .from('tournament_seasons')
-              .select('*')
-              .eq('year', year)
-              .single();
+              .select('*');
 
-            let activeSeasonData = {};
-            if (seasonData) {
-              activeSeasonData = seasonData.data || {};
-            } else {
-              activeSeasonData = {
+            const editionsMap = {};
+            if (allSeasonsData) {
+              allSeasonsData.forEach(row => {
+                editionsMap[row.year] = row.data;
+              });
+            }
+
+            // Ensure active season exists in map
+            if (!editionsMap[year]) {
+              const activeSeasonData = {
                 year: year,
                 isFinished: false,
                 teams: [],
@@ -159,16 +162,17 @@ function App() {
               if (isBuilderAvailable) {
                 await supabase.from('tournament_seasons').upsert({ year: year, data: activeSeasonData });
               }
+              editionsMap[year] = activeSeasonData;
             }
             
-            setEditions({ [year]: activeSeasonData });
+            setEditions(editionsMap);
 
             const snapshot = JSON.stringify({
               activeEditionYear: year,
               palmaresOverview: basicData.palmares_overview || [],
               globalRules: basicData.global_rules || "",
               globalFieldInfo: basicData.global_field_info || {},
-              editions: { [year]: activeSeasonData }
+              editions: editionsMap
             });
             lastSavedRef.current = snapshot;
 
@@ -178,7 +182,7 @@ function App() {
               localStorage.setItem('iit_global_rules', basicData.global_rules || "");
               localStorage.setItem('iit_global_field_info', JSON.stringify(basicData.global_field_info || {}));
               localStorage.setItem('iit_seasons_list', JSON.stringify(sList));
-              localStorage.setItem('iit_editions', JSON.stringify({ [year]: activeSeasonData }));
+              localStorage.setItem('iit_editions', JSON.stringify(editionsMap));
             }
             setIsLoading(false);
             return;
