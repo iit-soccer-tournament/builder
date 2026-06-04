@@ -69,7 +69,11 @@ function BuilderMain({
   globalFieldInfo,
   onUpdateGlobalFieldInfo,
   onResetDefault,
-  onPreviewToggle
+  onPreviewToggle,
+  saveStatus,
+  onUploadImage,
+  onSave,
+  onRollback
 }) {
   const [activeBuilderTab, setActiveBuilderTab] = useState('edition');
   const [newYear, setNewYear] = useState('');
@@ -236,12 +240,59 @@ function BuilderMain({
         <div className="admin-banner-content" style={{ color: 'var(--text-dark)' }}>
           <Settings className="spin-slow text-green" />
           <div>
-            <h3 style={{ margin: 0, fontWeight: 800 }}>IIT Soccer Tournament Builder</h3>
-            <p className="text-muted text-xs">Manage years, log scores, upload trophies, and export ZIP backups.</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <h3 style={{ margin: 0, fontWeight: 800 }}>IIT Soccer Tournament Builder</h3>
+              {saveStatus && (
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: saveStatus === 'saved' ? 'rgba(22, 163, 74, 0.1)' :
+                              saveStatus === 'saving' ? 'rgba(59, 130, 246, 0.1)' :
+                              saveStatus === 'unsaved' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  color: saveStatus === 'saved' ? '#16a34a' :
+                         saveStatus === 'saving' ? '#3b82f6' :
+                         saveStatus === 'unsaved' ? '#d97706' : '#ef4444',
+                  border: saveStatus === 'saved' ? '1px solid rgba(22, 163, 74, 0.2)' :
+                          saveStatus === 'saving' ? '1px solid rgba(59, 130, 246, 0.2)' :
+                          saveStatus === 'unsaved' ? '1px solid rgba(234, 179, 8, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)'
+                }}>
+                  {saveStatus === 'saved' && '● Cloud Synced'}
+                  {saveStatus === 'saving' && '◌ Saving Changes...'}
+                  {saveStatus === 'unsaved' && '● Local (Unsaved to Cloud)'}
+                  {saveStatus === 'error' && '▲ Connection Lost'}
+                </span>
+              )}
+            </div>
+            <p className="text-muted text-xs" style={{ margin: '4px 0 0 0' }}>Manage years, log scores, upload trophies, and export ZIP backups.</p>
           </div>
         </div>
         
         <div className="admin-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {onSave && (
+            <button 
+              onClick={onSave} 
+              className="success-btn" 
+              style={{ background: '#2563eb' }}
+              disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+            >
+              {saveStatus === 'saving' ? 'Saving...' : '💾 Save to Cloud'}
+            </button>
+          )}
+          {onRollback && (
+            <button 
+              onClick={onRollback} 
+              className="danger-btn" 
+              style={{ background: '#dc2626' }}
+              disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+            >
+              ↩ Rollback Draft
+            </button>
+          )}
           <button onClick={onPreviewToggle} className="success-btn" style={{ background: '#15803d' }}>
             <Play size={14} /> Live Preview Site
           </button>
@@ -609,6 +660,7 @@ function BuilderMain({
               const updated = (currentEdition.customTrophies || []).filter(t => t.id !== id);
               updateCurrentEdition({ customTrophies: updated });
             }}
+            onUploadImage={onUploadImage}
           />
         )}
 

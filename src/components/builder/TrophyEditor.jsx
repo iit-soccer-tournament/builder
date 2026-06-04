@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Upload } from 'lucide-react';
 
-function TrophyEditor({ trophies = [], onAddTrophy, onDeleteTrophy }) {
+function TrophyEditor({ trophies = [], onAddTrophy, onDeleteTrophy, onUploadImage }) {
   const [name, setName] = useState('');
   const [winner, setWinner] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -20,13 +21,25 @@ function TrophyEditor({ trophies = [], onAddTrophy, onDeleteTrophy }) {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !winner.trim()) return;
+    if (!name.trim() || !winner.trim() || isUploading) return;
 
-    // Call onAddTrophy. We store the base64 preview inside imageData.
-    // In export mode, our ZIP compiler will parse this back to a file.
-    onAddTrophy(name.trim(), winner.trim(), imagePreview || '🏆');
+    let finalImg = imagePreview || '🏆';
+
+    if (imageFile && onUploadImage) {
+      setIsUploading(true);
+      try {
+        finalImg = await onUploadImage(imageFile);
+      } catch (err) {
+        alert("Failed to upload image to storage: " + err.message);
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
+    }
+
+    onAddTrophy(name.trim(), winner.trim(), finalImg);
 
     // Reset Form
     setName('');
@@ -34,6 +47,7 @@ function TrophyEditor({ trophies = [], onAddTrophy, onDeleteTrophy }) {
     setImageFile(null);
     setImagePreview('');
   };
+
 
   return (
     <div className="card text-left">
@@ -88,7 +102,25 @@ function TrophyEditor({ trophies = [], onAddTrophy, onDeleteTrophy }) {
               </div>
             </div>
           </div>
-          <button type="submit" className="success-btn mt-3"><Plus size={16} /> Save Award</button>
+           <button type="submit" className="success-btn mt-3" disabled={isUploading}>
+            {isUploading ? (
+              <>
+                <span className="spinner-inline" style={{
+                  display: 'inline-block',
+                  width: '12px',
+                  height: '12px',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderLeft: '2px solid white',
+                  borderRadius: '50%',
+                  marginRight: '6px',
+                  animation: 'spin 1s linear infinite'
+                }} />
+                Uploading to Cloud...
+              </>
+            ) : (
+              <><Plus size={16} /> Save Award</>
+            )}
+          </button>
         </form>
 
         {/* Existing Custom Trophies */}
@@ -100,7 +132,7 @@ function TrophyEditor({ trophies = [], onAddTrophy, onDeleteTrophy }) {
               style={{ background: '#f8fafc', border: '1.5px solid var(--border-color)', borderRadius: '16px' }}
             >
               <div style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px' }}>
-                {t.imageData && t.imageData.startsWith('data:') ? (
+                {(t.imageData && (t.imageData.startsWith('data:') || t.imageData.startsWith('http') || t.imageData.startsWith('./') || t.imageData.startsWith('images/'))) ? (
                   <img 
                     src={t.imageData} 
                     alt={t.name} 

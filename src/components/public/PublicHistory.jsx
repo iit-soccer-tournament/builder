@@ -14,7 +14,7 @@ function PublicHistory({ palmares = [], editions = {}, onSelectEdition }) {
             const champTrophy = (editionData.customTrophies || []).find(
               t => t.id === `champ_${record.year}` || t.name === "Champion Team Photo"
             );
-            const imgSource = champTrophy ? (champTrophy.imageData || champTrophy.imagePath) : null;
+            const imgSource = record.championPhoto || (champTrophy ? (champTrophy.imageData || champTrophy.imagePath) : null);
 
             return (
               <div key={record.year} className="history-card" style={{ display: 'grid', gridTemplateColumns: imgSource ? '1fr 2fr' : '1fr', gap: '20px', alignItems: 'center', marginBottom: '24px', padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
