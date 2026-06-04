@@ -208,11 +208,24 @@ function BuilderMain({
       const ed = parsedDb.editions[yr];
       if (ed.customTrophies) {
         for (const t of ed.customTrophies) {
-          if (t.imagePath) {
-            const imageZipFile = zip.file(t.imagePath);
+           if (t.imagePath) {
+            let imageZipFile = zip.file(t.imagePath);
+            if (!imageZipFile) {
+              const basename = t.imagePath.split('/').pop();
+              const zipFiles = Object.keys(zip.files);
+              const foundKey = zipFiles.find(name => {
+                const lower = name.toLowerCase();
+                return lower.endsWith(basename.toLowerCase()) ||
+                  (lower.includes('images/') && lower.includes(t.id.toLowerCase())) ||
+                  (lower.includes('images/') && lower.includes(yr) && (lower.includes('champ') || lower.includes('trophy')));
+              });
+              if (foundKey) {
+                imageZipFile = zip.file(foundKey);
+              }
+            }
             if (imageZipFile) {
               const base64 = await imageZipFile.async("base64");
-              const ext = t.imagePath.split('.').pop();
+              const ext = imageZipFile.name.split('.').pop();
               const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
               t.imageData = `data:${mime};base64,${base64}`;
             }
