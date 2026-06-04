@@ -1192,7 +1192,6 @@ function App() {
             )}
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {isBuilder && (
               <>
                 <button
                   onClick={handleSaveChanges}
@@ -1228,7 +1227,6 @@ function App() {
                   ↩ Rollback Draft
                 </button>
               </>
-            )}
             <button 
               onClick={() => {
                 setIsBuilder(!isBuilder);
