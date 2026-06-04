@@ -285,27 +285,7 @@ function BuilderMain({
           </div>
         </div>
         
-        <div className="admin-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {onSave && (
-            <button 
-              onClick={onSave} 
-              className="success-btn" 
-              style={{ background: '#2563eb' }}
-              disabled={saveStatus === 'saving' || saveStatus === 'saved'}
-            >
-              {saveStatus === 'saving' ? 'Saving...' : '💾 Save to Cloud'}
-            </button>
-          )}
-          {onRollback && (
-            <button 
-              onClick={onRollback} 
-              className="danger-btn" 
-              style={{ background: '#dc2626' }}
-              disabled={saveStatus === 'saving' || saveStatus === 'saved'}
-            >
-              ↩ Rollback Draft
-            </button>
-          )}
+         <div className="admin-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
           <button onClick={onPreviewToggle} className="success-btn" style={{ background: '#15803d' }}>
             <Play size={14} /> Live Preview Site
           </button>
@@ -316,8 +296,23 @@ function BuilderMain({
             <Upload size={14} /> Import ZIP Bundle
             <input type="file" accept=".zip" onChange={handleImportZip} style={{ display: 'none' }} />
           </label>
-          <button onClick={onResetDefault} className="danger-btn">
-            <RefreshCw size={14} /> Reset Defaults
+          <button 
+            onClick={onResetDefault} 
+            className="danger-btn" 
+            style={{ 
+              padding: '6px 10px', 
+              fontSize: '11px', 
+              lineHeight: 1, 
+              background: '#94a3b8', 
+              color: 'white',
+              border: 'none',
+              boxShadow: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <RefreshCw size={11} /> Reset Defaults
           </button>
         </div>
       </div>

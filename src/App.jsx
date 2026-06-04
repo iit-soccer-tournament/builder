@@ -77,6 +77,8 @@ function App() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
+  const [resetCountdown, setResetCountdown] = useState(5);
 
   // UI state
   const [isBuilder, setIsBuilder] = useState(isBuilderAvailable); // App starts in Builder Mode if available
@@ -409,6 +411,24 @@ function App() {
     loadSeasonData();
   }, [activeEditionYear, supabase, isLoading]);
 
+  // Countdown timer for custom Reset Defaults confirmation dialog
+  useEffect(() => {
+    let interval;
+    if (showResetConfirmModal) {
+      setResetCountdown(5);
+      interval = setInterval(() => {
+        setResetCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showResetConfirmModal]);
+
   // Sync state changes with localStorage (only in builder mode)
   useEffect(() => {
     if (isBuilderAvailable) {
@@ -672,12 +692,12 @@ function App() {
   };
 
   const handleResetDefault = () => {
-    if (window.confirm("Are you sure you want to reset all data to the values in `./data/data.json`? Your custom modifications will be lost!")) {
-      localStorage.clear();
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    }
+    setShowResetConfirmModal(true);
+  };
+
+  const handleExecuteReset = () => {
+    localStorage.clear();
+    window.location.reload();
   };
 
   const handleLogin = async (e) => {
@@ -1171,7 +1191,43 @@ function App() {
               <span>👀 Live Preview Mode active. You are seeing the static website.</span>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {isBuilder && (
+              <>
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+                  style={{
+                    background: saveStatus === 'saved' ? '#15803d' : (saveStatus === 'saving' ? '#64748b' : '#2563eb'),
+                    color: '#ffffff',
+                    border: saveStatus === 'saved' ? '1px solid #166534' : 'none',
+                    cursor: saveStatus === 'saving' || saveStatus === 'saved' ? 'not-allowed' : 'pointer',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontWeight: 'bold',
+                    fontSize: '13px'
+                  }}
+                >
+                  {saveStatus === 'saving' ? 'Saving...' : (saveStatus === 'saved' ? '💾 Saved' : '💾 Save to Cloud')}
+                </button>
+                <button
+                  onClick={handleRollbackChanges}
+                  disabled={saveStatus === 'saving'}
+                  style={{
+                    background: '#dc2626',
+                    color: '#ffffff',
+                    border: '1px solid #991b1b',
+                    cursor: saveStatus === 'saving' ? 'not-allowed' : 'pointer',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontWeight: 'bold',
+                    fontSize: '13px'
+                  }}
+                >
+                  ↩ Rollback Draft
+                </button>
+              </>
+            )}
             <button 
               onClick={() => {
                 setIsBuilder(!isBuilder);
@@ -1180,7 +1236,7 @@ function App() {
                 }
               }}
               className="admin-toggle active"
-              style={{ background: 'white', color: isBuilder ? '#1e293b' : '#16a34a', border: 'none', cursor: 'pointer', padding: '8px 16px', borderRadius: '6px' }}
+              style={{ background: 'white', color: isBuilder ? '#1e293b' : '#16a34a', border: 'none', cursor: 'pointer', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px' }}
             >
               {isBuilder ? (
                 <><Play size={14} className="inline-icon mr-1" /> Open Live Preview</>
@@ -1192,7 +1248,7 @@ function App() {
               <button 
                 onClick={handleLogout}
                 className="admin-toggle active"
-                style={{ background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', padding: '8px 16px', borderRadius: '6px' }}
+                style={{ background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', padding: '8px 16px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px' }}
               >
                 Sign Out
               </button>
@@ -1350,6 +1406,90 @@ function App() {
             <p>© {activeEditionYear} IIT Soccer Tournament. Remade with premium styling &amp; hash routing.</p>
           </footer>
         </>
+      )}
+      {showResetConfirmModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            border: '1.5px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '16px',
+            padding: '30px',
+            maxWidth: '480px',
+            width: '100%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
+            textAlign: 'center',
+            color: 'white'
+          }}>
+            <div style={{
+              fontSize: '48px',
+              marginBottom: '15px'
+            }}>⚠️</div>
+            <h3 style={{
+              fontSize: '20px',
+              fontWeight: 800,
+              color: '#ef4444',
+              margin: '0 0 12px 0'
+            }}>Reset to Defaults?</h3>
+            <p style={{
+              fontSize: '14px',
+              color: '#94a3b8',
+              lineHeight: 1.6,
+              margin: '0 0 25px 0'
+            }}>
+              Are you sure you want to reset all data to the values in <code>./data/data.json</code>? Your custom modifications will be lost!
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center'
+            }}>
+              <button
+                onClick={() => setShowResetConfirmModal(false)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: '#94a3b8',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '14px'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExecuteReset}
+                disabled={resetCountdown > 0}
+                style={{
+                  background: resetCountdown > 0 ? '#64748b' : '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  cursor: resetCountdown > 0 ? 'not-allowed' : 'pointer',
+                  padding: '10px 24px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '14px'
+                }}
+              >
+                Confirm Reset {resetCountdown > 0 ? `(${resetCountdown})` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
