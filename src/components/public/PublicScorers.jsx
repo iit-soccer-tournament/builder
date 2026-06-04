@@ -1,29 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 function PublicScorers({ scorers = [], getTeamName }) {
-  const [genderTab, setGenderTab] = useState('Men');
-  const filtered = scorers
-    .filter(s => s.gender === genderTab)
+  const menScorers = scorers
+    .filter(s => (s.gender || 'Men') === 'Men')
     .sort((a, b) => b.goals - a.goals);
 
-  return (
-    <div className="card">
+  const womenScorers = scorers
+    .filter(s => (s.gender || 'Men') === 'Women')
+    .sort((a, b) => b.goals - a.goals);
+
+  const renderTable = (list, title, genderIcon) => (
+    <div className="card text-left" style={{ margin: 0 }}>
       <div className="card-header flex-between">
-        <h2>Top Scorers</h2>
-        <div className="gender-tabs">
-          <button 
-            className={genderTab === 'Men' ? 'active' : ''} 
-            onClick={() => setGenderTab('Men')}
-          >
-            Men
-          </button>
-          <button 
-            className={genderTab === 'Women' ? 'active' : ''} 
-            onClick={() => setGenderTab('Women')}
-          >
-            Women
-          </button>
-        </div>
+        <h2>{genderIcon} {title}</h2>
       </div>
       <div className="card-body">
         <div className="table-responsive">
@@ -37,7 +26,7 @@ function PublicScorers({ scorers = [], getTeamName }) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((scorer, index) => (
+              {list.map((scorer, index) => (
                 <tr key={scorer.id}>
                   <td>
                     <span className="rank-badge">{index + 1}</span>
@@ -47,7 +36,7 @@ function PublicScorers({ scorers = [], getTeamName }) {
                   <td className="font-bold text-lg text-green">{scorer.goals}</td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
+              {list.length === 0 && (
                 <tr>
                   <td colSpan={4} className="text-center py-6 text-muted">No scorer records logged.</td>
                 </tr>
@@ -56,6 +45,13 @@ function PublicScorers({ scorers = [], getTeamName }) {
           </table>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+      {renderTable(menScorers, "Men's Top Scorers", "♂")}
+      {renderTable(womenScorers, "Women's Top Scorers", "♀")}
     </div>
   );
 }
