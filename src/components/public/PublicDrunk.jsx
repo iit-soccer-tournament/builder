@@ -1,4 +1,3 @@
-import React from 'react';
 import { Beer } from 'lucide-react';
 
 function PublicDrunk({ drunkContest = [] }) {
@@ -60,10 +59,6 @@ function PublicDrunk({ drunkContest = [] }) {
               <li>🙌 Fans, supporters, and players can all register beers for their squad.</li>
               <li>🏆 The team with the most beers wins a custom trophy and a case of beer!</li>
             </ul>
-            <div className="beer-visual text-center py-6">
-              <div className="large-beer">🍺</div>
-              <p className="small-text text-muted mt-2">Always remember to drink responsibly and enjoy the games.</p>
-            </div>
           </div>
         </div>
       </div>

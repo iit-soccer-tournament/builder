@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Trophy, 
   Calendar, 
@@ -8,7 +8,6 @@ import {
   History, 
   Shield, 
   Play,
-  RotateCcw,
   BookOpen
 } from 'lucide-react';
 import { supabase } from './supabase';
@@ -1402,7 +1401,7 @@ function App() {
           </main>
 
           <footer className="footer">
-            <p>© {activeEditionYear} IIT Soccer Tournament. Remade with premium styling &amp; hash routing.</p>
+            <p>© {activeEditionYear} IIT Soccer Tournament.</p>
           </footer>
         </>
       )}
