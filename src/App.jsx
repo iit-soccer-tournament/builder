@@ -141,20 +141,18 @@ function App() {
             const sList = basicData.seasons_list || {};
             setSeasonsList(sList);
 
-            // Fetch all seasons
-            const { data: allSeasonsData } = await supabase
+            // Fetch only the active season
+            const { data: activeSeasonRow } = await supabase
               .from('tournament_seasons')
-              .select('*');
+              .select('*')
+              .eq('year', year)
+              .maybeSingle();
 
             const editionsMap = {};
-            if (allSeasonsData) {
-              allSeasonsData.forEach(row => {
-                editionsMap[row.year] = row.data;
-              });
-            }
-
-            // Ensure active season exists in map
-            if (!editionsMap[year]) {
+            if (activeSeasonRow) {
+              editionsMap[year] = activeSeasonRow.data;
+            } else {
+              // Ensure active season exists in map
               const activeSeasonData = {
                 year: year,
                 isFinished: false,
@@ -413,6 +411,40 @@ function App() {
 
     loadSeasonData();
   }, [activeEditionYear, isLoading, editions]);
+
+  // Load all seasons when entering the history/palmares tab or in builder mode
+  useEffect(() => {
+    if (!supabase || isLoading) return;
+    if (activeTab === 'history' || isBuilder) {
+      const missingYears = Object.keys(seasonsList).map(Number).filter(y => !editions[y]);
+      if (missingYears.length === 0) return;
+
+      const loadMissingSeasons = async () => {
+        setIsLoading(true);
+        try {
+          const { data: seasonsData } = await supabase
+            .from('tournament_seasons')
+            .select('*')
+            .in('year', missingYears);
+
+          if (seasonsData) {
+            setEditions(prev => {
+              const updated = { ...prev };
+              seasonsData.forEach(row => {
+                updated[row.year] = row.data;
+              });
+              return updated;
+            });
+          }
+        } catch (err) {
+          console.error("Failed to load historical seasons:", err);
+        }
+        setIsLoading(false);
+      };
+
+      loadMissingSeasons();
+    }
+  }, [activeTab, isBuilder, seasonsList, editions, isLoading]);
 
   // Countdown timer for custom Reset Defaults confirmation dialog
   useEffect(() => {
