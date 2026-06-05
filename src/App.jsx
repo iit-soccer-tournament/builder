@@ -398,10 +398,25 @@ function App() {
           .single();
           
         if (seasonData) {
-          setEditions(prev => ({
-            ...prev,
-            [activeEditionYear]: seasonData.data
-          }));
+          setEditions(prev => {
+            const updated = {
+              ...prev,
+              [activeEditionYear]: seasonData.data
+            };
+            if (lastSavedRef.current) {
+              try {
+                const lastSaved = JSON.parse(lastSavedRef.current);
+                lastSaved.editions = {
+                  ...lastSaved.editions,
+                  [activeEditionYear]: seasonData.data
+                };
+                lastSavedRef.current = JSON.stringify(lastSaved);
+              } catch (e) {
+                console.error(e);
+              }
+            }
+            return updated;
+          });
         }
       } catch (err) {
         console.error(`Failed to load season data for ${activeEditionYear}:`, err);
@@ -433,6 +448,18 @@ function App() {
               seasonsData.forEach(row => {
                 updated[row.year] = row.data;
               });
+              if (lastSavedRef.current) {
+                try {
+                  const lastSaved = JSON.parse(lastSavedRef.current);
+                  lastSaved.editions = {
+                    ...lastSaved.editions,
+                    ...updated
+                  };
+                  lastSavedRef.current = JSON.stringify(lastSaved);
+                } catch (e) {
+                  console.error(e);
+                }
+              }
               return updated;
             });
           }
@@ -944,14 +971,9 @@ function App() {
 
         if (basicData) {
           const year = basicData.active_edition_year || 2026;
-          setActiveEditionYear(year);
-          setPalmaresOverview(basicData.palmares_overview || []);
-          setGlobalRules(basicData.global_rules || "");
-          setGlobalFieldInfo(basicData.global_field_info || {});
-          
           const sList = basicData.seasons_list || {};
-          setSeasonsList(sList);
 
+          // Fetch the active season data first, BEFORE triggering any state changes or intermediate renders
           const { data: seasonData } = await supabase
             .from('tournament_seasons')
             .select('*')
@@ -962,7 +984,13 @@ function App() {
           if (seasonData) {
             activeSeasonData = seasonData.data || {};
           }
-          
+
+          // Now apply all state changes at once
+          setActiveEditionYear(year);
+          setPalmaresOverview(basicData.palmares_overview || []);
+          setGlobalRules(basicData.global_rules || "");
+          setGlobalFieldInfo(basicData.global_field_info || {});
+          setSeasonsList(sList);
           setEditions({ [year]: activeSeasonData });
 
           // Update local storage drafts
