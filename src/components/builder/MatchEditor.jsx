@@ -592,21 +592,21 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                     </td>
                   ) : (
                     <>
-                      <td className="text-xs">
+                      <td className="text-xs" style={{ borderBottom: hasScorers ? 'none' : undefined }}>
                         <div className="font-bold">{m.date}</div>
                         <div className="text-muted">Pitch {m.pitch} • {m.time}</div>
                       </td>
-                      <td className="text-xs font-bold text-green">{m.round}</td>
-                      <td className="text-right font-bold">{getTeamName(m.team1, m.team1Text)}</td>
-                      <td>
+                      <td className="text-xs font-bold text-green" style={{ borderBottom: hasScorers ? 'none' : undefined }}>{m.round}</td>
+                      <td className="text-right font-bold" style={{ borderBottom: hasScorers ? 'none' : undefined }}>{getTeamName(m.team1, m.team1Text)}</td>
+                      <td style={{ whiteSpace: 'nowrap', width: '120px', borderBottom: hasScorers ? 'none' : undefined }}>
                         {m.status === 'played' ? (
-                          <span className="score-badge">{m.score1} - {m.score2}</span>
+                          <span className="score-badge" style={{ margin: '0 4px' }}>{m.score1} - {m.score2}</span>
                         ) : (
                           <span className="text-muted text-xs">vs</span>
                         )}
                       </td>
-                      <td className="text-left font-bold">{getTeamName(m.team2, m.team2Text)}</td>
-                      <td>
+                      <td className="text-left font-bold" style={{ borderBottom: hasScorers ? 'none' : undefined }}>{getTeamName(m.team2, m.team2Text)}</td>
+                      <td style={{ borderBottom: hasScorers ? 'none' : undefined }}>
                         <div className="scorer-admin-btns" style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                           <button 
                             onClick={() => startEdit(m, 'info')} 
@@ -639,17 +639,17 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                 </tr>
                 {editingId !== m.id && hasScorers && (
                   <tr style={{ background: '#f8fafc' }}>
-                    <td colSpan={2}></td>
-                    <td style={{ padding: '6px 10px', fontSize: '11px', color: '#64748b', textAlign: 'right', fontStyle: 'italic' }}>
+                    <td colSpan={2} style={{ borderTop: 'none', padding: '4px 10px' }}></td>
+                    <td style={{ borderTop: 'none', padding: '4px 10px', fontSize: '11px', color: '#64748b', textAlign: 'right', fontStyle: 'italic' }}>
                       {countScorersHelper(m.scorers1 || [])}
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: '11px', color: '#475569', textAlign: 'center' }}>
+                    <td style={{ borderTop: 'none', padding: '4px 10px', fontSize: '11px', color: '#475569', textAlign: 'center', width: '120px' }}>
                       ⚽
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: '11px', color: '#64748b', textAlign: 'left', fontStyle: 'italic' }}>
+                    <td style={{ borderTop: 'none', padding: '4px 10px', fontSize: '11px', color: '#64748b', textAlign: 'left', fontStyle: 'italic' }}>
                       {countScorersHelper(m.scorers2 || [])}
                     </td>
-                    <td></td>
+                    <td style={{ borderTop: 'none', padding: '4px 10px' }}></td>
                   </tr>
                 )}
               </React.Fragment>
