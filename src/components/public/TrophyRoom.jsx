@@ -85,7 +85,7 @@ function TrophyRoom({ edition }) {
     <div className="trophy-room-pane font-sans" style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
       <div className="card" style={{ border: 'none', borderRadius: '24px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', background: 'white', overflow: 'hidden' }}>
         <div className="card-header" style={{ padding: '30px', background: 'linear-gradient(135deg, #1e293b, #0f172a)', color: 'white', borderBottom: 'none', textAlign: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px' }}>IIT Soccer Tournament {edition.year}</h2>
+          <h2 style={{ color: '#ffffff', margin: 0, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px' }}>IIT Soccer Tournament {edition.year}</h2>
         </div>
         <div className="card-body" style={{ padding: '40px 30px' }}>
           
