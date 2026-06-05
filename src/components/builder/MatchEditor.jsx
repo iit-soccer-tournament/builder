@@ -42,6 +42,33 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
     return t ? t.name : fallback;
   };
 
+  const countScorersHelper = (list) => {
+    if (!list) return '';
+    const counts = {};
+    const ogs = [];
+    list.forEach(item => {
+      if (!item) return;
+      const name = typeof item === 'object' && item !== null ? item.name : item;
+      const isOg = typeof item === 'object' && item !== null ? !!item.isOwnGoal : false;
+      const gender = typeof item === 'object' && item !== null ? item.gender || 'Men' : 'Men';
+      if (isOg) {
+        ogs.push(`${name} (OG)`);
+      } else {
+        const key = `${name}_${gender}`;
+        counts[key] = (counts[key] || 0) + 1;
+      }
+    });
+
+    const regularList = Object.entries(counts).map(([key, count]) => {
+      const idx = key.lastIndexOf('_');
+      const name = key.substring(0, idx);
+      const gender = key.substring(idx + 1);
+      const symbol = gender === 'Women' ? '♀' : '♂';
+      return `${name} ${count > 1 ? `(${count})` : ''} ${symbol}`.trim();
+    });
+    return [...regularList, ...ogs].join(', ');
+  };
+
   const handleCreate = (e) => {
     e.preventDefault();
     if ((!newMatch.team1 && !newMatch.team1Text) || (!newMatch.team2 && !newMatch.team2Text)) return;
@@ -212,8 +239,11 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
               </tr>
             </thead>
             <tbody>
-              {matches.map((m) => (
-                <tr key={m.id}>
+              {matches.map((m) => {
+                const hasScorers = m.status === 'played' && ((m.scorers1 && m.scorers1.length > 0) || (m.scorers2 && m.scorers2.length > 0));
+                return (
+                  <React.Fragment key={m.id}>
+                    <tr>
                   {editingId === m.id ? (
                     <td colSpan={6} style={{ background: '#f8fafc', padding: '16px' }}>
                       <div className="space-y-4">
@@ -611,7 +641,23 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                     </>
                   )}
                 </tr>
-              ))}
+                {editingId !== m.id && hasScorers && (
+                  <tr style={{ background: '#f8fafc' }}>
+                    <td colSpan={2}></td>
+                    <td style={{ padding: '6px 10px', fontSize: '11px', color: '#64748b', textAlign: 'right', fontStyle: 'italic' }}>
+                      {countScorersHelper(m.scorers1 || [])}
+                    </td>
+                    <td style={{ padding: '6px 10px', fontSize: '11px', color: '#475569', textAlign: 'center' }}>
+                      ⚽
+                    </td>
+                    <td style={{ padding: '6px 10px', fontSize: '11px', color: '#64748b', textAlign: 'left', fontStyle: 'italic' }}>
+                      {countScorersHelper(m.scorers2 || [])}
+                    </td>
+                    <td></td>
+                  </tr>
+                )}
+              </React.Fragment>
+            )})}
               {matches.length === 0 && (
                 <tr>
                   <td colSpan={6} className="text-center py-6 text-muted">No matches scheduled.</td>
