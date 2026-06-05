@@ -356,13 +356,13 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                     });
 
                                     const removeOneGoal = (name, isOg, gender = 'Men') => {
-                                      const targetName = (name || '').toLowerCase();
+                                      const targetName = (name || '').trim().toLowerCase();
                                       const idx = editScorers1.findIndex(item => {
                                         if (!item) return false;
-                                        const itemName = (typeof item === 'object' ? item.name : item) || '';
+                                        const itemName = ((typeof item === 'object' ? item.name : item) || '').trim().toLowerCase();
                                         const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
-                                        const itemGender = typeof item === 'object' ? item.gender || 'Men' : 'Men';
-                                        return itemName.toLowerCase() === targetName && itemIsOg === isOg && itemGender.toLowerCase() === gender.toLowerCase();
+                                        const itemGender = ((typeof item === 'object' ? item.gender : 'Men') || 'Men').trim().toLowerCase();
+                                        return itemName === targetName && itemIsOg === isOg && itemGender === gender.toLowerCase().trim();
                                       });
                                       if (idx !== -1) {
                                         setEditScorers1(editScorers1.filter((_, i) => i !== idx));
@@ -396,7 +396,14 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                     placeholder="Scorer Name"
                                     list="registered-players-list"
                                     value={newScorer1}
-                                    onChange={e => setNewScorer1(e.target.value)}
+                                    onChange={e => {
+                                      const val = e.target.value;
+                                      setNewScorer1(val);
+                                      const matchedPlayer = scorers.find(s => s.name && s.name.trim().toLowerCase() === val.trim().toLowerCase());
+                                      if (matchedPlayer && matchedPlayer.gender) {
+                                        setScorerGender1(matchedPlayer.gender);
+                                      }
+                                    }}
                                     style={{ padding: '4px', fontSize: '12px', flex: 1 }}
                                   />
                                   <select
@@ -428,6 +435,7 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                         setEditScorers1([...editScorers1, ...newGoals]);
                                         setNewScorer1('');
                                         setGoalsCount1(1);
+                                        setScorerGender1('Men');
                                         setEditStatus('played');
                                       }
                                     }}
@@ -472,13 +480,13 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                     });
 
                                     const removeOneGoal = (name, isOg, gender = 'Men') => {
-                                      const targetName = (name || '').toLowerCase();
+                                      const targetName = (name || '').trim().toLowerCase();
                                       const idx = editScorers2.findIndex(item => {
                                         if (!item) return false;
-                                        const itemName = (typeof item === 'object' ? item.name : item) || '';
+                                        const itemName = ((typeof item === 'object' ? item.name : item) || '').trim().toLowerCase();
                                         const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
-                                        const itemGender = typeof item === 'object' ? item.gender || 'Men' : 'Men';
-                                        return itemName.toLowerCase() === targetName && itemIsOg === isOg && itemGender.toLowerCase() === gender.toLowerCase();
+                                        const itemGender = ((typeof item === 'object' ? item.gender : 'Men') || 'Men').trim().toLowerCase();
+                                        return itemName === targetName && itemIsOg === isOg && itemGender === gender.toLowerCase().trim();
                                       });
                                       if (idx !== -1) {
                                         setEditScorers2(editScorers2.filter((_, i) => i !== idx));
@@ -512,7 +520,14 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                     placeholder="Scorer Name"
                                     list="registered-players-list"
                                     value={newScorer2}
-                                    onChange={e => setNewScorer2(e.target.value)}
+                                    onChange={e => {
+                                      const val = e.target.value;
+                                      setNewScorer2(val);
+                                      const matchedPlayer = scorers.find(s => s.name && s.name.trim().toLowerCase() === val.trim().toLowerCase());
+                                      if (matchedPlayer && matchedPlayer.gender) {
+                                        setScorerGender2(matchedPlayer.gender);
+                                      }
+                                    }}
                                     style={{ padding: '4px', fontSize: '12px', flex: 1 }}
                                   />
                                   <select
@@ -544,6 +559,7 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                         setEditScorers2([...editScorers2, ...newGoals]);
                                         setNewScorer2('');
                                         setGoalsCount2(1);
+                                        setScorerGender2('Men');
                                         setEditStatus('played');
                                       }
                                     }}
