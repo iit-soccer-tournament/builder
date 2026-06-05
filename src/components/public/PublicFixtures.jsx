@@ -3,8 +3,6 @@ import { X } from 'lucide-react';
 function PublicFixtures({ 
   edition, 
   standings, 
-  selectedRoundFilter, 
-  setSelectedRoundFilter, 
   selectedTeamFilter, 
   setSelectedTeamFilter, 
   getTeamName, 
@@ -13,9 +11,7 @@ function PublicFixtures({
   
   // Group matches by date
   const getGroupedMatches = () => {
-    let filtered = selectedRoundFilter === 'All' 
-      ? (edition.matches || []) 
-      : (edition.matches || []).filter(m => m.round === selectedRoundFilter);
+    let filtered = edition.matches || [];
 
     if (selectedTeamFilter) {
       filtered = filtered.filter(m => m.team1 === selectedTeamFilter || m.team2 === selectedTeamFilter);
@@ -141,22 +137,6 @@ function PublicFixtures({
                   </button>
                 </div>
               )}
-            </div>
-            <div className="filters">
-              <select 
-                value={selectedRoundFilter} 
-                onChange={(e) => setSelectedRoundFilter(e.target.value)}
-                className="round-select"
-              >
-                <option value="All">All Stages</option>
-                <option value="Regular Season">Regular Season</option>
-                <option value="Playoff (Quarter)">Playoffs</option>
-                <option value="Playout (HoS)">Playouts</option>
-                <option value="Semifinal">Semifinals</option>
-                <option value="3rd Place Final">3rd Place</option>
-                <option value="Hall of Shame Final">Hall of Shame Final</option>
-                <option value="Championship Final">Championship Final</option>
-              </select>
             </div>
           </div>
 

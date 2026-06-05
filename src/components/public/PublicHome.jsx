@@ -51,9 +51,7 @@ function PublicHome({ edition, getTeamName, fieldInfo }) {
                         const regularList = Object.entries(counts).map(([key, count]) => {
                           const idx = key.lastIndexOf('_');
                           const name = key.substring(0, idx);
-                          const gender = key.substring(idx + 1);
-                          const symbol = gender === 'Women' ? '♀' : '♂';
-                          return `${name} ${count > 1 ? `(${count})` : ''} ${symbol}`;
+                          return `${name}${count > 1 ? ` (${count})` : ''}`;
                         });
                         return [...regularList, ...ogs].join(', ');
                       };
