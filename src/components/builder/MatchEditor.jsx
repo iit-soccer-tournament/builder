@@ -409,68 +409,7 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                 <span className="text-xs font-bold text-green block mb-1">
                                   {getTeamName(editTeam1, editTeam1Text || 'Team 1')} Goals ({editScorers1.length})
                                 </span>
-                                                                    <div className="space-y-1 mb-2" style={{
-                                                                        maxHeight: '120px',
-                                                                        overflowY: 'auto'
-                                                                    }}>
-                                                                        {(() => {
-                                                                            const grouped = [];
-                                                                            editScorers1.forEach((sc) => {
-                                                                                const isOg = typeof sc === 'object' && sc !== null && sc.isOwnGoal;
-                                                                                const name = typeof sc === 'object' && sc !== null ? sc.name : sc;
-                                                                                const gender = typeof sc === 'object' && sc !== null ? sc.gender || 'Men' : 'Men';
-                                                                                const match = grouped.find(g => g.name.toLowerCase() === name.toLowerCase() && g.isOwnGoal === isOg && g.gender === gender);
-                                                                                if (match) {
-                                                                                    match.count += 1;
-                                                                                } else {
-                                                                                    grouped.push({
-                                                                                        name,
-                                                                                        isOwnGoal: isOg,
-                                                                                        gender,
-                                                                                        count: 1
-                                                                                    });
-                                                                                }
-                                                                            });
-
-                                                                            return grouped.map((sc, idx) => (
-                                                                                <div key={idx}
-                                                                                     className="flex-between text-xs bg-white p-1 rounded border">
-                                        <span>
-                                          <strong>{sc.name}</strong>
-                                            {sc.count > 1 && <span style={{
-                                                marginLeft: '4px',
-                                                background: '#cbd5e1',
-                                                padding: '1px 5px',
-                                                borderRadius: '4px',
-                                                fontWeight: 'bold'
-                                            }}>x{sc.count}</span>}
-                                            {sc.isOwnGoal &&
-                                                <strong style={{color: '#ef4444', marginLeft: '4px'}}>(OG)</strong>}
-                                            {!sc.isOwnGoal && <span style={{
-                                                color: '#64748b',
-                                                marginLeft: '4px'
-                                            }}>({sc.gender || 'Men'})</span>}
-                                        </span>
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        onClick={() => removeOneGoalTeam1(sc.name, sc.isOwnGoal)}
-                                                                                        style={{
-                                                                                            background: 'none',
-                                                                                            border: 'none',
-                                                                                            color: '#ef4444',
-                                                                                            cursor: 'pointer'
-                                                                                        }}
-                                                                                        title="Remove one goal"
-                                                                                    >
-                                                                                        <Trash2 size={12}/>
-                                                                                    </button>
-                                                                                </div>
-                                                                            ));
-                                                                        })()}
-                                                                        {editScorers1.length === 0 &&
-                                                                            <span className="text-xs text-muted">No goals logged</span>}
-                                                                    </div>
-                                                                    <div className="flex-gap"
+                                                                    <div className="flex-gap mb-2"
                                                                          style={{alignItems: 'center'}}>
                                                                         <input
                                                                             type="text"
@@ -560,20 +499,13 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                                                             Add OG
                                                                         </button>
                                                                     </div>
-                                                                </div>
-
-                                                                {/* Team 2 Scorers */}
-                                                                <div>
-                                <span className="text-xs font-bold text-green block mb-1">
-                                  {getTeamName(editTeam2, editTeam2Text || 'Team 2')} Goals ({editScorers2.length})
-                                </span>
                                                                     <div className="space-y-1 mb-2" style={{
                                                                         maxHeight: '120px',
                                                                         overflowY: 'auto'
                                                                     }}>
                                                                         {(() => {
                                                                             const grouped = [];
-                                                                            editScorers2.forEach((sc) => {
+                                                                            editScorers1.forEach((sc) => {
                                                                                 const isOg = typeof sc === 'object' && sc !== null && sc.isOwnGoal;
                                                                                 const name = typeof sc === 'object' && sc !== null ? sc.name : sc;
                                                                                 const gender = typeof sc === 'object' && sc !== null ? sc.gender || 'Men' : 'Men';
@@ -611,7 +543,7 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                         </span>
                                                                                     <button
                                                                                         type="button"
-                                                                                        onClick={() => removeOneGoalTeam2(sc.name, sc.isOwnGoal)}
+                                                                                        onClick={() => removeOneGoalTeam1(sc.name, sc.isOwnGoal)}
                                                                                         style={{
                                                                                             background: 'none',
                                                                                             border: 'none',
@@ -625,10 +557,17 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                                                                 </div>
                                                                             ));
                                                                         })()}
-                                                                        {editScorers2.length === 0 &&
+                                                                        {editScorers1.length === 0 &&
                                                                             <span className="text-xs text-muted">No goals logged</span>}
                                                                     </div>
-                                                                    <div className="flex-gap"
+                                                                </div>
+
+                                                                {/* Team 2 Scorers */}
+                                                                <div>
+                                <span className="text-xs font-bold text-green block mb-1">
+                                  {getTeamName(editTeam2, editTeam2Text || 'Team 2')} Goals ({editScorers2.length})
+                                </span>
+                                                                    <div className="flex-gap mb-2"
                                                                          style={{alignItems: 'center'}}>
                                                                         <input
                                                                             type="text"
@@ -717,6 +656,67 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                                                         >
                                                                             Add OG
                                                                         </button>
+                                                                    </div>
+                                                                    <div className="space-y-1 mb-2" style={{
+                                                                        maxHeight: '120px',
+                                                                        overflowY: 'auto'
+                                                                    }}>
+                                                                        {(() => {
+                                                                            const grouped = [];
+                                                                            editScorers2.forEach((sc) => {
+                                                                                const isOg = typeof sc === 'object' && sc !== null && sc.isOwnGoal;
+                                                                                const name = typeof sc === 'object' && sc !== null ? sc.name : sc;
+                                                                                const gender = typeof sc === 'object' && sc !== null ? sc.gender || 'Men' : 'Men';
+                                                                                const match = grouped.find(g => g.name.toLowerCase() === name.toLowerCase() && g.isOwnGoal === isOg && g.gender === gender);
+                                                                                if (match) {
+                                                                                    match.count += 1;
+                                                                                } else {
+                                                                                    grouped.push({
+                                                                                        name,
+                                                                                        isOwnGoal: isOg,
+                                                                                        gender,
+                                                                                        count: 1
+                                                                                    });
+                                                                                }
+                                                                            });
+
+                                                                            return grouped.map((sc, idx) => (
+                                                                                <div key={idx}
+                                                                                     className="flex-between text-xs bg-white p-1 rounded border">
+                                        <span>
+                                          <strong>{sc.name}</strong>
+                                            {sc.count > 1 && <span style={{
+                                                marginLeft: '4px',
+                                                background: '#cbd5e1',
+                                                padding: '1px 5px',
+                                                borderRadius: '4px',
+                                                fontWeight: 'bold'
+                                            }}>x{sc.count}</span>}
+                                            {sc.isOwnGoal &&
+                                                <strong style={{color: '#ef4444', marginLeft: '4px'}}>(OG)</strong>}
+                                            {!sc.isOwnGoal && <span style={{
+                                                color: '#64748b',
+                                                marginLeft: '4px'
+                                            }}>({sc.gender || 'Men'})</span>}
+                                        </span>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => removeOneGoalTeam2(sc.name, sc.isOwnGoal)}
+                                                                                        style={{
+                                                                                            background: 'none',
+                                                                                            border: 'none',
+                                                                                            color: '#ef4444',
+                                                                                            cursor: 'pointer'
+                                                                                        }}
+                                                                                        title="Remove one goal"
+                                                                                    >
+                                                                                        <Trash2 size={12}/>
+                                                                                    </button>
+                                                                                </div>
+                                                                            ));
+                                                                        })()}
+                                                                        {editScorers2.length === 0 &&
+                                                                            <span className="text-xs text-muted">No goals logged</span>}
                                                                     </div>
                                                                 </div>
                                                             </div>
