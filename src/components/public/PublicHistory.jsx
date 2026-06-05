@@ -45,6 +45,12 @@ function PublicHistory({ palmares = [], editions = {}, onSelectEdition }) {
                       <span className="label">🥈 Runner-up</span>
                       <span className="value">{record.runnerUp}</span>
                     </div>
+                    {record.thirdPlace && (
+                      <div className="history-metric">
+                        <span className="label">🥉 3rd Place</span>
+                        <span className="value">{record.thirdPlace}</span>
+                      </div>
+                    )}
                     <div className="history-metric">
                       <span className="label">🍺 Drunk Champions</span>
                       <span className="value text-amber">{record.drunkChampion}</span>
@@ -57,6 +63,12 @@ function PublicHistory({ palmares = [], editions = {}, onSelectEdition }) {
                       <span className="label">⚽ Top Scorer (Women)</span>
                       <span className="value">{record.topScorerW || '-'}</span>
                     </div>
+                    {record.lastPlace && (
+                      <div className="history-metric">
+                        <span className="label">💩 Last Place</span>
+                        <span className="value text-rose-600">{record.lastPlace}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

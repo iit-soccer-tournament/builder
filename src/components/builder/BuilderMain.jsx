@@ -113,7 +113,6 @@ function BuilderMain({
     scorers: getScorersFromMatches(rawEdition.matches)
   };
 
-  // Update active edition key-value helper
   const updateCurrentEdition = (updatedFields) => {
     setEditions({
       ...editions,
@@ -121,6 +120,58 @@ function BuilderMain({
         ...currentEdition,
         ...updatedFields
       }
+    });
+  };
+
+  const [isChampPhotoUploading, setIsChampPhotoUploading] = useState(false);
+
+  const handleChampPhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsChampPhotoUploading(true);
+    let imageUrl = '';
+    if (onUploadImage) {
+      try {
+        imageUrl = await onUploadImage(file);
+      } catch (err) {
+        alert("Failed to upload image: " + err.message);
+        setIsChampPhotoUploading(false);
+        return;
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        saveChampPhoto(event.target.result);
+        setIsChampPhotoUploading(false);
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+    saveChampPhoto(imageUrl);
+    setIsChampPhotoUploading(false);
+  };
+
+  const saveChampPhoto = (url) => {
+    const existingTrophies = currentEdition.customTrophies || [];
+    const otherTrophies = existingTrophies.filter(t => t.id !== `champ_${activeEditionYear}` && t.name !== "Champion Team Photo");
+    const newChampTrophy = {
+      id: `champ_${activeEditionYear}`,
+      name: "Champion Team Photo",
+      winner: currentEdition.champion || "Champion Team",
+      imageData: url,
+      imagePath: url
+    };
+    updateCurrentEdition({
+      customTrophies: [...otherTrophies, newChampTrophy]
+    });
+  };
+
+  const handleRemoveChampPhoto = () => {
+    const existingTrophies = currentEdition.customTrophies || [];
+    const otherTrophies = existingTrophies.filter(t => t.id !== `champ_${activeEditionYear}` && t.name !== "Champion Team Photo");
+    updateCurrentEdition({
+      customTrophies: otherTrophies
     });
   };
 
@@ -429,7 +480,20 @@ function BuilderMain({
                           <input 
                             type="text" 
                             value={currentEdition.champion || ''} 
-                            onChange={e => updateCurrentEdition({ champion: e.target.value })} 
+                            onChange={e => {
+                              const newChamp = e.target.value;
+                              const existingTrophies = currentEdition.customTrophies || [];
+                              const updatedTrophies = existingTrophies.map(t => {
+                                if (t.id === `champ_${activeEditionYear}` || t.name === "Champion Team Photo") {
+                                  return { ...t, winner: newChamp };
+                                }
+                                return t;
+                              });
+                              updateCurrentEdition({ 
+                                champion: newChamp,
+                                customTrophies: updatedTrophies
+                              });
+                            }} 
                           />
                         </div>
                         <div>
@@ -438,6 +502,14 @@ function BuilderMain({
                             type="text" 
                             value={currentEdition.runnerUp || ''} 
                             onChange={e => updateCurrentEdition({ runnerUp: e.target.value })} 
+                          />
+                        </div>
+                        <div>
+                          <label>Third Place (Team)</label>
+                          <input 
+                            type="text" 
+                            value={currentEdition.thirdPlace || ''} 
+                            onChange={e => updateCurrentEdition({ thirdPlace: e.target.value })} 
                           />
                         </div>
                         <div>
@@ -463,6 +535,58 @@ function BuilderMain({
                             value={currentEdition.topScorerW || ''} 
                             onChange={e => updateCurrentEdition({ topScorerW: e.target.value })} 
                           />
+                        </div>
+                        <div>
+                          <label>Last Place (Team)</label>
+                          <input 
+                            type="text" 
+                            value={currentEdition.lastPlace || ''} 
+                            onChange={e => updateCurrentEdition({ lastPlace: e.target.value })} 
+                          />
+                        </div>
+                        <div>
+                          <label>Champion Team Photo</label>
+                          {(() => {
+                            const champTrophy = (currentEdition.customTrophies || []).find(
+                              t => t.id === `champ_${activeEditionYear}` || t.name === "Champion Team Photo"
+                            );
+                            if (champTrophy) {
+                              return (
+                                <div className="flex-gap items-center mt-1" style={{ background: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                  <img 
+                                    src={champTrophy.imageData || champTrophy.imagePath} 
+                                    alt="Champion team" 
+                                    style={{ maxHeight: '80px', maxWidth: '120px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                                  />
+                                  <div className="flex-col">
+                                    <span className="text-xs font-bold text-slate-700 block">Photo Uploaded</span>
+                                    <button 
+                                      type="button" 
+                                      className="danger-btn btn-sm mt-1" 
+                                      onClick={handleRemoveChampPhoto}
+                                      style={{ padding: '4px 8px', fontSize: '11px', cursor: 'pointer' }}
+                                    >
+                                      Remove Photo
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div className="flex-gap items-center mt-1">
+                                <label className="file-upload-label" style={{ margin: 0, padding: '10px 18px', display: 'inline-flex', cursor: 'pointer' }}>
+                                  <Upload size={16} className="mr-1" /> {isChampPhotoUploading ? 'Uploading...' : 'Upload Champion Photo'}
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleChampPhotoChange} 
+                                    disabled={isChampPhotoUploading}
+                                    style={{ display: 'none' }} 
+                                  />
+                                </label>
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     )}

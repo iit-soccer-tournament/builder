@@ -891,6 +891,8 @@ function App() {
       }
 
       const updatedSeasonsList = { ...seasonsList };
+      const updatedPalmares = [];
+
       Object.keys(updatedEditions).forEach(yr => {
         const ed = updatedEditions[yr];
         updatedSeasonsList[yr] = {
@@ -898,11 +900,30 @@ function App() {
           isFinished: ed.isFinished || false,
           champion: ed.champion || '',
           runnerUp: ed.runnerUp || '',
+          thirdPlace: ed.thirdPlace || '',
+          lastPlace: ed.lastPlace || '',
           drunkChampion: ed.drunkChampion || '',
           topScorerM: ed.topScorerM || '',
           topScorerW: ed.topScorerW || ''
         };
+
+        if (ed.isFinished) {
+          updatedPalmares.push({
+            year: parseInt(yr, 10),
+            champion: ed.champion || '',
+            runnerUp: ed.runnerUp || '',
+            thirdPlace: ed.thirdPlace || '',
+            lastPlace: ed.lastPlace || '',
+            drunkChampion: ed.drunkChampion || '',
+            topScorerM: ed.topScorerM || '',
+            topScorerW: ed.topScorerW || ''
+          });
+        }
       });
+
+      // Sort palmares in descending order of year
+      updatedPalmares.sort((a, b) => b.year - a.year);
+      setPalmaresOverview(updatedPalmares);
 
       // Save global data
       const { error: gErr } = await supabase
@@ -910,7 +931,7 @@ function App() {
         .upsert({
           id: 'global',
           active_edition_year: activeEditionYear,
-          palmares_overview: palmaresOverview,
+          palmares_overview: updatedPalmares,
           global_rules: globalRules,
           global_field_info: globalFieldInfo,
           seasons_list: updatedSeasonsList
