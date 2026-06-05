@@ -106,6 +106,36 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
     setScorerGender2('Men');
   };
 
+  const removeOneGoalTeam1 = (name, isOg) => {
+    console.log("Removing Team 1 goal:", name, "isOg:", isOg);
+    const targetName = (name || '').trim().toLowerCase();
+    const idx = editScorers1.findIndex(item => {
+      if (!item) return false;
+      const itemName = ((typeof item === 'object' ? item.name : item) || '').trim().toLowerCase();
+      const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
+      return itemName === targetName && itemIsOg === isOg;
+    });
+    console.log("Found index for Team 1 goal removal:", idx);
+    if (idx !== -1) {
+      setEditScorers1(editScorers1.filter((_, i) => i !== idx));
+    }
+  };
+
+  const removeOneGoalTeam2 = (name, isOg) => {
+    console.log("Removing Team 2 goal:", name, "isOg:", isOg);
+    const targetName = (name || '').trim().toLowerCase();
+    const idx = editScorers2.findIndex(item => {
+      if (!item) return false;
+      const itemName = ((typeof item === 'object' ? item.name : item) || '').trim().toLowerCase();
+      const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
+      return itemName === targetName && itemIsOg === isOg;
+    });
+    console.log("Found index for Team 2 goal removal:", idx);
+    if (idx !== -1) {
+      setEditScorers2(editScorers2.filter((_, i) => i !== idx));
+    }
+  };
+
   const saveEdit = (id) => {
     if (editType === 'info') {
       onSaveMatch(id, {
@@ -355,19 +385,6 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                       }
                                     });
 
-                                    const removeOneGoal = (name, isOg) => {
-                                      const targetName = (name || '').trim().toLowerCase();
-                                      const idx = editScorers1.findIndex(item => {
-                                        if (!item) return false;
-                                        const itemName = ((typeof item === 'object' ? item.name : item) || '').trim().toLowerCase();
-                                        const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
-                                        return itemName === targetName && itemIsOg === isOg;
-                                      });
-                                      if (idx !== -1) {
-                                        setEditScorers1(editScorers1.filter((_, i) => i !== idx));
-                                      }
-                                    };
-
                                     return grouped.map((sc, idx) => (
                                       <div key={idx} className="flex-between text-xs bg-white p-1 rounded border">
                                         <span>
@@ -378,7 +395,7 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                         </span>
                                         <button 
                                           type="button" 
-                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal)} 
+                                          onClick={() => removeOneGoalTeam1(sc.name, sc.isOwnGoal)} 
                                           style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                                           title="Remove one goal"
                                         >
@@ -478,19 +495,6 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                       }
                                     });
 
-                                    const removeOneGoal = (name, isOg) => {
-                                      const targetName = (name || '').trim().toLowerCase();
-                                      const idx = editScorers2.findIndex(item => {
-                                        if (!item) return false;
-                                        const itemName = ((typeof item === 'object' ? item.name : item) || '').trim().toLowerCase();
-                                        const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
-                                        return itemName === targetName && itemIsOg === isOg;
-                                      });
-                                      if (idx !== -1) {
-                                        setEditScorers2(editScorers2.filter((_, i) => i !== idx));
-                                      }
-                                    };
-
                                     return grouped.map((sc, idx) => (
                                       <div key={idx} className="flex-between text-xs bg-white p-1 rounded border">
                                         <span>
@@ -501,7 +505,7 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                         </span>
                                         <button 
                                           type="button" 
-                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal)} 
+                                          onClick={() => removeOneGoalTeam2(sc.name, sc.isOwnGoal)} 
                                           style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                                           title="Remove one goal"
                                         >
