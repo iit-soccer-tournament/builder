@@ -184,12 +184,12 @@ function PublicFixtures({
                         if (!text1 && !text2) return null;
 
                         return (
-                          <div className="match-scorers-view" style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px dashed #e2e8f0', paddingTop: '6px', marginTop: '6px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                            <div style={{ textAlign: 'left', flex: 1, paddingRight: '10px', fontStyle: 'italic' }}>
+                          <div className="match-scorers-view">
+                            <div className="scorers-left">
                               {text1}
                             </div>
-                            <div style={{ width: '40px' }}></div>
-                            <div style={{ textAlign: 'right', flex: 1, paddingLeft: '10px', fontStyle: 'italic' }}>
+                            <div className="scorers-spacer"></div>
+                            <div className="scorers-right">
                               {text2}
                             </div>
                           </div>

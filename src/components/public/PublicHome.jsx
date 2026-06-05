@@ -62,12 +62,12 @@ function PublicHome({ edition, getTeamName, fieldInfo }) {
                       if (!text1 && !text2) return null;
 
                       return (
-                        <div className="qm-scorers" style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px dashed #e2e8f0', paddingTop: '4px', marginTop: '2px', display: 'flex', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
-                          <div style={{ textAlign: 'right', flex: 1, paddingRight: '10px', fontStyle: 'italic' }}>
+                        <div className="qm-scorers">
+                          <div className="qm-scorers-left">
                             {text1}
                           </div>
-                          <div style={{ width: '40px' }}></div>
-                          <div style={{ textAlign: 'left', flex: 1, paddingLeft: '10px', fontStyle: 'italic' }}>
+                          <div className="qm-scorers-spacer"></div>
+                          <div className="qm-scorers-right">
                             {text2}
                           </div>
                         </div>

@@ -9,7 +9,7 @@ function PublicDrunk({ drunkContest = [] }) {
       <div className="drunk-card">
         <div className="card">
           <div className="card-header">
-            <h2>Beer Consumption Leaderboard</h2>
+            <h2>Drunk Contest</h2>
           </div>
           <div className="card-body">
             <div className="table-responsive">

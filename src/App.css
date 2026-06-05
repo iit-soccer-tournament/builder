@@ -373,6 +373,36 @@ body {
   color: var(--text-dark);
 }
 
+.qm-scorers {
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 4px;
+  margin-top: 2px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.qm-scorers-left {
+  text-align: right;
+  flex: 1;
+  padding-right: 10px;
+  font-style: italic;
+}
+
+.qm-scorers-spacer {
+  width: 40px;
+}
+
+.qm-scorers-right {
+  text-align: left;
+  flex: 1;
+  padding-left: 10px;
+  font-style: italic;
+}
+
 .team-name {
   flex: 1;
 }
@@ -604,6 +634,35 @@ body {
   font-weight: 900;
   font-size: 20px;
   color: #15803d;
+}
+
+.match-scorers-view {
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 6px;
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scorers-left {
+  text-align: left;
+  flex: 1;
+  padding-right: 10px;
+  font-style: italic;
+}
+
+.scorers-spacer {
+  width: 40px;
+}
+
+.scorers-right {
+  text-align: right;
+  flex: 1;
+  padding-left: 10px;
+  font-style: italic;
 }
 
 /* Admin forms and lists */
@@ -852,9 +911,6 @@ body {
   grid-template-columns: 1.8fr 1.2fr;
   gap: 24px;
   align-items: start;
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
 }
 
 .beer-king {
@@ -947,15 +1003,27 @@ body {
   background: rgba(255, 255, 255, 0.85);
   border: 1.5px solid rgba(21, 128, 61, 0.12);
   border-radius: 16px;
-  padding: 20px 24px;
-  display: flex;
+  padding: 20px;
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
   align-items: center;
-  gap: 24px;
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
+}
+
+.history-card.has-image {
+  grid-template-columns: 1fr 2fr;
+}
+
+.history-image-container img {
+  max-width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  border-radius: 10px;
+  border: 2px solid #ca8a04;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .history-year {
@@ -971,9 +1039,6 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   width: 100%;
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr 1fr;
-  }
 }
 
 .history-metric {
@@ -1066,6 +1131,10 @@ body {
 
 /* Responsive adjustments for mobile and tablets */
 @media (max-width: 768px) {
+  .app-container {
+    padding: 12px;
+  }
+
   /* Public navigation menu styling for mobile: grid-aligned, high usability */
   .nav-tabs {
     flex-wrap: wrap;
@@ -1128,10 +1197,102 @@ body {
   .col-span-2 {
     grid-column: span 1;
   }
+  
+  /* Drunk Contest layout stacking */
+  .drunk-contest-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Palmares/History layout stacking */
+  .history-card.has-image {
+    grid-template-columns: 1fr;
+  }
 }
 
 .table-responsive {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 600px) {
+  /* Match list fixtures layout */
+  .match-teams-score {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+    text-align: center;
+    justify-items: center;
+  }
+  .team-row.right-align {
+    justify-content: center !important;
+    text-align: center !important;
+    flex-direction: row-reverse !important;
+  }
+  .team-row.left-align {
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .score-display {
+    padding: 4px 12px !important;
+    background: #f0fdf4 !important;
+    border-radius: 8px !important;
+    margin: 4px 0 !important;
+    display: inline-block;
+    width: auto;
+  }
+
+  /* Scorer names alignment */
+  .match-scorers-view {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .scorers-left, .scorers-right {
+    text-align: center;
+    padding: 0;
+  }
+  .scorers-spacer {
+    display: none;
+  }
+
+  /* Quick Match list on home page */
+  .quick-match-row .qm-teams {
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+  }
+  .team-name.text-right, .team-name.text-left {
+    text-align: center;
+  }
+  .score-badge {
+    margin: 4px 0;
+  }
+  .vs-badge {
+    margin: 4px 0;
+  }
+  .qm-scorers {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .qm-scorers-left, .qm-scorers-right {
+    text-align: center;
+    padding: 0;
+  }
+  .qm-scorers-spacer {
+    display: none;
+  }
+}
+
+/* History grid column counts on intermediate size viewports */
+@media (max-width: 1024px) {
+  .history-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
 }

@@ -118,7 +118,7 @@ function TrophyRoom({ edition }) {
           {trophyList.length === 0 ? (
             <p className="text-muted text-center py-12">No trophies or awards logged for this season yet.</p>
           ) : (
-            <div className="trophies-list-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+            <div className="trophies-list-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
               {trophyList.map((trophy) => (
                 <div 
                   key={trophy.id} 

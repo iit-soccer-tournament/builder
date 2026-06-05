@@ -15,13 +15,12 @@ function PublicHistory({ palmares = [], editions = {}, onSelectEdition }) {
             const imgSource = record.championPhoto || (champTrophy ? (champTrophy.imageData || champTrophy.imagePath) : null);
 
             return (
-              <div key={record.year} className="history-card" style={{ display: 'grid', gridTemplateColumns: imgSource ? '1fr 2fr' : '1fr', gap: '20px', alignItems: 'center', marginBottom: '24px', padding: '20px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div key={record.year} className={`history-card ${imgSource ? 'has-image' : ''}`}>
                 {imgSource && (
                   <div className="history-image-container">
                     <img 
                       src={imgSource} 
                       alt={`${record.champion} Champion Team`}
-                      style={{ maxWidth: '100%', maxHeight: '180px', objectFit: 'contain', display: 'block', margin: '0 auto', borderRadius: '10px', border: '2px solid #ca8a04', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                     />
                   </div>
                 )}
