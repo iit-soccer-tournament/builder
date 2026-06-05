@@ -72,7 +72,7 @@ function App() {
   const [saveStatus, setSaveStatus] = useState('saved'); // 'saved' | 'saving' | 'unsaved' | 'error'
   const [seasonsList, setSeasonsList] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(() => supabase ? true : false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -92,7 +92,6 @@ function App() {
   // 1. Supabase Auth state listener
   useEffect(() => {
     if (!supabase) {
-      setAuthLoading(false);
       return;
     }
     
@@ -408,13 +407,12 @@ function App() {
     };
 
     loadSeasonData();
-  }, [activeEditionYear, supabase, isLoading]);
+  }, [activeEditionYear, isLoading, editions]);
 
   // Countdown timer for custom Reset Defaults confirmation dialog
   useEffect(() => {
     let interval;
     if (showResetConfirmModal) {
-      setResetCountdown(5);
       interval = setInterval(() => {
         setResetCountdown(prev => {
           if (prev <= 1) {
@@ -691,6 +689,7 @@ function App() {
   };
 
   const handleResetDefault = () => {
+    setResetCountdown(5);
     setShowResetConfirmModal(true);
   };
 
@@ -732,7 +731,7 @@ function App() {
       throw new Error("Supabase is not initialized.");
     }
     const fileName = `${Date.now()}_${file.name}`;
-    const { data, error: uploadErr } = await supabase.storage
+    const { error: uploadErr } = await supabase.storage
       .from('tournament-images')
       .upload(`images/${fileName}`, file, {
         cacheControl: '3600',

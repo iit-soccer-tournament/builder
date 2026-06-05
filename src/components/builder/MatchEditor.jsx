@@ -19,8 +19,6 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
   const [editScorers2, setEditScorers2] = useState([]);
   const [newScorer1, setNewScorer1] = useState('');
   const [newScorer2, setNewScorer2] = useState('');
-  const [isOwnGoal1, setIsOwnGoal1] = useState(false);
-  const [isOwnGoal2, setIsOwnGoal2] = useState(false);
   const [goalsCount1, setGoalsCount1] = useState(1);
   const [goalsCount2, setGoalsCount2] = useState(1);
   const [scorerGender1, setScorerGender1] = useState('Men');
@@ -102,8 +100,6 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
     setEditScorers2(m.scorers2 || []);
     setNewScorer1('');
     setNewScorer2('');
-    setIsOwnGoal1(false);
-    setIsOwnGoal2(false);
     setGoalsCount1(1);
     setGoalsCount2(1);
     setScorerGender1('Men');

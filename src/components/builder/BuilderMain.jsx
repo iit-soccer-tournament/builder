@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import JSZip from 'jszip';
 import { 
   Settings, 
@@ -6,14 +6,11 @@ import {
   Calendar, 
   Users2, 
   Beer, 
-  FileText, 
   Award, 
   Download, 
   Upload, 
   Plus, 
-  Trash2, 
   RefreshCw, 
-  Check, 
   Play,
   ClipboardList
 } from 'lucide-react';
@@ -71,9 +68,7 @@ function BuilderMain({
   onResetDefault,
   onPreviewToggle,
   saveStatus,
-  onUploadImage,
-  onSave,
-  onRollback
+  onUploadImage
 }) {
   const [activeBuilderTab, setActiveBuilderTab] = useState('edition');
   const [newYear, setNewYear] = useState('');

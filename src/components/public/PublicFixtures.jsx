@@ -1,4 +1,3 @@
-import React from 'react';
 import { X } from 'lucide-react';
 
 function PublicFixtures({ 
@@ -75,10 +74,11 @@ function PublicFixtures({
               </thead>
               <tbody>
                 {standings.map((team, index) => {
-                  let posClass = "";
-                  if (index < 2) posClass = "advance-direct";
-                  else if (index < 6) posClass = "playoffs";
-                  else posClass = "playouts";
+                  const posClass = index < 2 
+                    ? "advance-direct" 
+                    : index < 6 
+                      ? "playoffs" 
+                      : "playouts";
 
                   const isFiltered = selectedTeamFilter === team.id;
 

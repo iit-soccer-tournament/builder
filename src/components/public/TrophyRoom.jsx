@@ -1,5 +1,4 @@
-import React from 'react';
-import { Trophy, Award, Users, Beer, Target } from 'lucide-react';
+import { Trophy, Award, Beer, Target } from 'lucide-react';
 
 function TrophyRoom({ edition }) {
   const trophies = edition.customTrophies || [];

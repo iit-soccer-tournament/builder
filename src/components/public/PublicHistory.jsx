@@ -1,5 +1,3 @@
-import React from 'react';
-import { History, Award } from 'lucide-react';
 
 function PublicHistory({ palmares = [], editions = {}, onSelectEdition }) {
   return (

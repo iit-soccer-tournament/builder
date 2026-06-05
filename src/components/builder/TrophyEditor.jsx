@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Plus, Trash2, Upload } from 'lucide-react';
 
 function TrophyEditor({ trophies = [], onAddTrophy, onDeleteTrophy, onUploadImage }) {

@@ -1,7 +1,6 @@
-import React from 'react';
-import { Calendar, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
-function PublicHome({ edition, getTeamName, getTeamColor, fieldInfo }) {
+function PublicHome({ edition, getTeamName, fieldInfo }) {
   const recentPlayed = (edition.matches || [])
     .filter(m => m.status === 'played')
     .slice(-3);
