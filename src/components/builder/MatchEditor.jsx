@@ -329,11 +329,14 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                       }
                                     });
 
-                                    const removeOneGoal = (name, isOg) => {
+                                    const removeOneGoal = (name, isOg, gender = 'Men') => {
+                                      const targetName = (name || '').toLowerCase();
                                       const idx = editScorers1.findIndex(item => {
-                                        const itemName = typeof item === 'object' && item !== null ? item.name : item;
-                                        const itemIsOg = typeof item === 'object' && item !== null ? !!item.isOwnGoal : false;
-                                        return itemName.toLowerCase() === name.toLowerCase() && itemIsOg === isOg;
+                                        if (!item) return false;
+                                        const itemName = (typeof item === 'object' ? item.name : item) || '';
+                                        const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
+                                        const itemGender = typeof item === 'object' ? item.gender || 'Men' : 'Men';
+                                        return itemName.toLowerCase() === targetName && itemIsOg === isOg && itemGender.toLowerCase() === gender.toLowerCase();
                                       });
                                       if (idx !== -1) {
                                         setEditScorers1(editScorers1.filter((_, i) => i !== idx));
@@ -350,7 +353,7 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                         </span>
                                         <button 
                                           type="button" 
-                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal)} 
+                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal, sc.gender || 'Men')} 
                                           style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                                           title="Remove one goal"
                                         >
@@ -442,11 +445,14 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                       }
                                     });
 
-                                    const removeOneGoal = (name, isOg) => {
+                                    const removeOneGoal = (name, isOg, gender = 'Men') => {
+                                      const targetName = (name || '').toLowerCase();
                                       const idx = editScorers2.findIndex(item => {
-                                        const itemName = typeof item === 'object' && item !== null ? item.name : item;
-                                        const itemIsOg = typeof item === 'object' && item !== null ? !!item.isOwnGoal : false;
-                                        return itemName.toLowerCase() === name.toLowerCase() && itemIsOg === isOg;
+                                        if (!item) return false;
+                                        const itemName = (typeof item === 'object' ? item.name : item) || '';
+                                        const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
+                                        const itemGender = typeof item === 'object' ? item.gender || 'Men' : 'Men';
+                                        return itemName.toLowerCase() === targetName && itemIsOg === isOg && itemGender.toLowerCase() === gender.toLowerCase();
                                       });
                                       if (idx !== -1) {
                                         setEditScorers2(editScorers2.filter((_, i) => i !== idx));
@@ -463,7 +469,7 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                         </span>
                                         <button 
                                           type="button" 
-                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal)} 
+                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal, sc.gender || 'Men')} 
                                           style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                                           title="Remove one goal"
                                         >
