@@ -355,14 +355,13 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                       }
                                     });
 
-                                    const removeOneGoal = (name, isOg, gender = 'Men') => {
+                                    const removeOneGoal = (name, isOg) => {
                                       const targetName = (name || '').trim().toLowerCase();
                                       const idx = editScorers1.findIndex(item => {
                                         if (!item) return false;
                                         const itemName = ((typeof item === 'object' ? item.name : item) || '').trim().toLowerCase();
                                         const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
-                                        const itemGender = ((typeof item === 'object' ? item.gender : 'Men') || 'Men').trim().toLowerCase();
-                                        return itemName === targetName && itemIsOg === isOg && itemGender === gender.toLowerCase().trim();
+                                        return itemName === targetName && itemIsOg === isOg;
                                       });
                                       if (idx !== -1) {
                                         setEditScorers1(editScorers1.filter((_, i) => i !== idx));
@@ -379,7 +378,7 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                         </span>
                                         <button 
                                           type="button" 
-                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal, sc.gender || 'Men')} 
+                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal)} 
                                           style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                                           title="Remove one goal"
                                         >
@@ -479,14 +478,13 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                       }
                                     });
 
-                                    const removeOneGoal = (name, isOg, gender = 'Men') => {
+                                    const removeOneGoal = (name, isOg) => {
                                       const targetName = (name || '').trim().toLowerCase();
                                       const idx = editScorers2.findIndex(item => {
                                         if (!item) return false;
                                         const itemName = ((typeof item === 'object' ? item.name : item) || '').trim().toLowerCase();
                                         const itemIsOg = typeof item === 'object' ? !!item.isOwnGoal : false;
-                                        const itemGender = ((typeof item === 'object' ? item.gender : 'Men') || 'Men').trim().toLowerCase();
-                                        return itemName === targetName && itemIsOg === isOg && itemGender === gender.toLowerCase().trim();
+                                        return itemName === targetName && itemIsOg === isOg;
                                       });
                                       if (idx !== -1) {
                                         setEditScorers2(editScorers2.filter((_, i) => i !== idx));
@@ -503,7 +501,7 @@ function MatchEditor({ matches = [], teams = [], scorers = [], onAddMatch, onDel
                                         </span>
                                         <button 
                                           type="button" 
-                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal, sc.gender || 'Men')} 
+                                          onClick={() => removeOneGoal(sc.name, sc.isOwnGoal)} 
                                           style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                                           title="Remove one goal"
                                         >
