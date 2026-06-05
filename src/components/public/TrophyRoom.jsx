@@ -83,64 +83,55 @@ function TrophyRoom({ edition }) {
 
   return (
     <div className="trophy-room-pane font-sans" style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
-      <div className="hero-section text-center mb-8" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', padding: '40px 20px', borderRadius: '24px', color: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(234, 179, 8, 0.1)', borderRadius: '50%', filter: 'blur(30px)' }}></div>
-        <div style={{ position: 'absolute', bottom: '-50px', left: '-50px', width: '150px', height: '150px', background: 'rgba(22, 163, 74, 0.1)', borderRadius: '50%', filter: 'blur(30px)' }}></div>
-        
-        <div className="large-beer" style={{ fontSize: '72px', animation: 'bounce 3s infinite', display: 'inline-block' }}>🏆</div>
-        <h2 className="mt-2 text-3xl font-black" style={{ letterSpacing: '-0.5px' }}>IIT Soccer Tournament {edition.year}</h2>
-        <p className="mt-2 text-slate-300 max-w-lg mx-auto" style={{ fontSize: '15px', lineHeight: 1.6 }}>The season has completed. Here are the champions, runners-up, and special award winners who left their mark on the pitch.</p>
-      </div>
-
-      {/* Highlighted Champion Team Photo Banner at the Top */}
-      {champTrophy && (
-        <div className="card mb-8" style={{ border: 'none', background: 'linear-gradient(135deg, #ffffff, #f8fafc)', borderRadius: '24px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-          <div className="card-header text-center" style={{ background: 'transparent', borderBottom: 'none', paddingTop: '30px' }}>
-            <h3 style={{ fontSize: '20px', color: '#1e293b', fontWeight: 800 }}>🥇 Champion Team Photo</h3>
-          </div>
-          <div className="card-body" style={{ padding: '0 30px 40px 30px' }}>
-            <div className="champ-photo-container text-center" style={{ position: 'relative', display: 'inline-block', maxWidth: '100%', margin: '0 auto' }}>
-              <img 
-                src={champTrophy.imageData || champTrophy.imagePath} 
-                alt={`${edition.champion || 'Champion'} Team Photo`}
-                style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: '480px', 
-                  objectFit: 'contain', 
-                  display: 'block', 
-                  margin: '0 auto', 
-                  borderRadius: '16px', 
-                  border: '4px solid #eab308', 
-                  boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' 
-                }}
-              />
-              <div style={{ marginTop: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#fef9c3', border: '1px solid #fef08a', borderRadius: '30px', color: '#854d0e', fontWeight: 'bold', fontSize: '14px' }}>
-                🎉 {edition.champion || 'Champion'} - Season {edition.year} Winners!
+      <div className="card" style={{ border: 'none', borderRadius: '24px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', background: 'white', overflow: 'hidden' }}>
+        <div className="card-header" style={{ padding: '30px', background: 'linear-gradient(135deg, #1e293b, #0f172a)', color: 'white', borderBottom: 'none', textAlign: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px' }}>IIT Soccer Tournament {edition.year}</h2>
+        </div>
+        <div className="card-body" style={{ padding: '40px 30px' }}>
+          
+          {/* Highlighted Champion Team Photo inside the card */}
+          {champTrophy && (
+            <div className="champ-photo-section text-center mb-10" style={{ paddingBottom: '30px', borderBottom: '1px solid #f1f5f9' }}>
+              <div className="champ-photo-container text-center" style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+                <img 
+                  src={champTrophy.imageData || champTrophy.imagePath} 
+                  alt={`${edition.champion || 'Champion'} Team Photo`}
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '440px', 
+                    objectFit: 'contain', 
+                    display: 'block', 
+                    margin: '0 auto', 
+                    borderRadius: '16px', 
+                    border: '4px solid #eab308', 
+                    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' 
+                  }}
+                />
+                <div style={{ marginTop: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#fef9c3', border: '1px solid #fef08a', borderRadius: '30px', color: '#854d0e', fontWeight: 'bold', fontSize: '14px' }}>
+                  🎉 {edition.champion || 'Champion'} - Season {edition.year} Winners!
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Main Awards Grid */}
-      <div className="card" style={{ border: 'none', borderRadius: '24px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', background: 'white' }}>
-        <div className="card-header" style={{ padding: '24px 30px', background: 'transparent', borderBottom: '1px solid #f1f5f9' }}>
-          <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' }}>🏆 Trophies &amp; Awards</h3>
-        </div>
-        <div className="card-body" style={{ padding: '30px' }}>
+          {/* Awards List */}
           {trophyList.length === 0 ? (
             <p className="text-muted text-center py-12">No trophies or awards logged for this season yet.</p>
           ) : (
-            <div className="trophies-list-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
+            <div className="trophies-list-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
               {trophyList.map((trophy) => (
                 <div 
                   key={trophy.id} 
-                  className="trophy-award-card text-center p-6" 
+                  className="trophy-award-card p-4" 
                   style={{ 
                     background: '#f8fafc', 
                     border: '1px solid #e2e8f0', 
                     borderRadius: '20px', 
                     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '20px',
+                    textAlign: 'left',
                     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                     cursor: 'default'
                   }}
@@ -153,25 +144,24 @@ function TrophyRoom({ edition }) {
                     e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02)';
                   }}
                 >
-                  <div className="trophy-avatar-container mb-4" style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div className="trophy-avatar-container" style={{ width: '80px', height: '80px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <img 
                       src={trophy.image} 
                       alt={trophy.name} 
-                      style={{ maxHeight: '110px', maxWidth: '100%', objectFit: 'contain' }} 
+                      style={{ maxHeight: '80px', maxWidth: '100%', objectFit: 'contain' }} 
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.style.display = 'none';
                         const emojiSpan = document.createElement('span');
                         emojiSpan.innerText = '🏆';
-                        emojiSpan.style.fontSize = '56px';
+                        emojiSpan.style.fontSize = '40px';
                         e.target.parentNode.appendChild(emojiSpan);
                       }}
                     />
                   </div>
-                  <h4 className="font-black text-md" style={{ color: '#0f172a', fontSize: '16px', marginBottom: '8px' }}>{trophy.name}</h4>
-                  <div style={{ display: 'inline-block', padding: '6px 16px', background: 'white', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                    <p className="text-xs text-slate-500 font-bold uppercase style={{ margin: 0 }}">Winner</p>
-                    <p className="text-sm font-black text-amber-600" style={{ margin: '2px 0 0 0' }}>{trophy.winner || 'TBD'}</p>
+                  <div className="trophy-details" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <h4 className="font-black" style={{ color: '#0f172a', fontSize: '16px', margin: 0 }}>{trophy.name}</h4>
+                    <p className="font-black text-amber-600" style={{ fontSize: '16px', margin: 0 }}>{trophy.winner || 'TBD'}</p>
                   </div>
                 </div>
               ))}
