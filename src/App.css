@@ -1122,4 +1122,16 @@ body {
     padding: 10px 6px;
     font-size: 13px;
   }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .col-span-2 {
+    grid-column: span 1;
+  }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }

@@ -80,7 +80,12 @@ function App() {
   const [resetCountdown, setResetCountdown] = useState(5);
 
   // UI state
-  const [isBuilder, setIsBuilder] = useState(isBuilderAvailable); // App starts in Builder Mode if available
+  const [isBuilder, setIsBuilder] = useState(() => {
+    if (!isBuilderAvailable) return false;
+    const currentHash = window.location.hash;
+    if (!currentHash) return true;
+    return currentHash.startsWith('#/builder/');
+  });
   const [activeTab, setActiveTab] = useState(() => {
     const hash = window.location.hash.replace('#/', '').replace('#', '');
     const validTabs = ['home', 'fixtures', 'scorers', 'drunk', 'rules', 'history'];
@@ -487,12 +492,32 @@ function App() {
 
   useEffect(() => {
     const handleHashChange = () => {
-      setActiveTab(getTabFromHash());
+      const hash = window.location.hash;
+      if (hash.startsWith('#/builder/')) {
+        if (isBuilderAvailable) {
+          setIsBuilder(true);
+        } else {
+          window.location.hash = '#/home';
+        }
+      } else {
+        setIsBuilder(false);
+        setActiveTab(getTabFromHash());
+      }
     };
     window.addEventListener('hashchange', handleHashChange);
-    if (!window.location.hash) {
-      window.location.hash = '#/home';
+
+    // Initial routing logic
+    const currentHash = window.location.hash;
+    if (isBuilderAvailable) {
+      if (!currentHash || (!currentHash.startsWith('#/builder/') && !['#/home', '#/fixtures', '#/scorers', '#/drunk', '#/rules', '#/history'].includes(currentHash))) {
+        window.location.hash = '#/builder/edition';
+      }
+    } else {
+      if (!currentHash || currentHash.startsWith('#/builder/')) {
+        window.location.hash = '#/home';
+      }
     }
+
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
@@ -720,7 +745,7 @@ function App() {
     if (!supabase) return;
     try {
       await supabase.auth.signOut();
-      setIsBuilder(true);
+      window.location.hash = '#/builder/edition';
     } catch (err) {
       console.error(err);
     }
@@ -1148,10 +1173,8 @@ function App() {
               Sign In
             </button>
           </form>
-
           <button
             onClick={() => {
-              setIsBuilder(false);
               window.location.hash = '#/home';
             }}
             style={{
@@ -1227,9 +1250,10 @@ function App() {
               </>
             <button 
               onClick={() => {
-                setIsBuilder(!isBuilder);
                 if (isBuilder) {
                   window.location.hash = '#/home';
+                } else {
+                  window.location.hash = '#/builder/edition';
                 }
               }}
               className="admin-toggle active"

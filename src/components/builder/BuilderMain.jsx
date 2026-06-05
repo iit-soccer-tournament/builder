@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import { 
   Settings, 
@@ -70,7 +70,31 @@ function BuilderMain({
   saveStatus,
   onUploadImage
 }) {
-  const [activeBuilderTab, setActiveBuilderTab] = useState('edition');
+  const [activeBuilderTab, setActiveBuilderTab] = useState(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#/builder/')) {
+      const tab = hash.substring('#/builder/'.length);
+      const validBuilderTabs = ['edition', 'teams', 'matches', 'scorers', 'beers', 'trophies'];
+      if (validBuilderTabs.includes(tab)) return tab;
+    }
+    return 'edition';
+  });
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/builder/')) {
+        const tab = hash.substring('#/builder/'.length);
+        const validBuilderTabs = ['edition', 'teams', 'matches', 'scorers', 'beers', 'trophies'];
+        if (validBuilderTabs.includes(tab)) {
+          setActiveBuilderTab(tab);
+        }
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
   const [newYear, setNewYear] = useState('');
 
   const rawEdition = editions[activeEditionYear] || {
@@ -314,22 +338,22 @@ function BuilderMain({
 
       {/* Editor Sub-Navigation Tabs */}
       <div className="nav-tabs" style={{ background: 'white', marginTop: '20px', border: '1.5px solid var(--border-color)', padding: '6px' }}>
-        <button className={activeBuilderTab === 'edition' ? 'active' : ''} onClick={() => setActiveBuilderTab('edition')}>
+        <button className={activeBuilderTab === 'edition' ? 'active' : ''} onClick={() => window.location.hash = '#/builder/edition'}>
           <ClipboardList size={16} /> Edition Setup
         </button>
-        <button className={activeBuilderTab === 'teams' ? 'active' : ''} onClick={() => setActiveBuilderTab('teams')}>
+        <button className={activeBuilderTab === 'teams' ? 'active' : ''} onClick={() => window.location.hash = '#/builder/teams'}>
           <Users2 size={16} /> Teams Registration
         </button>
-        <button className={activeBuilderTab === 'matches' ? 'active' : ''} onClick={() => setActiveBuilderTab('matches')}>
+        <button className={activeBuilderTab === 'matches' ? 'active' : ''} onClick={() => window.location.hash = '#/builder/matches'}>
           <Calendar size={16} /> Matches Scheduler
         </button>
-        <button className={activeBuilderTab === 'scorers' ? 'active' : ''} onClick={() => setActiveBuilderTab('scorers')}>
+        <button className={activeBuilderTab === 'scorers' ? 'active' : ''} onClick={() => window.location.hash = '#/builder/scorers'}>
           <Users size={16} /> Top Scorers
         </button>
-        <button className={activeBuilderTab === 'beers' ? 'active' : ''} onClick={() => setActiveBuilderTab('beers')}>
+        <button className={activeBuilderTab === 'beers' ? 'active' : ''} onClick={() => window.location.hash = '#/builder/beers'}>
           <Beer size={16} /> Beer Contest
         </button>
-        <button className={activeBuilderTab === 'trophies' ? 'active' : ''} onClick={() => setActiveBuilderTab('trophies')}>
+        <button className={activeBuilderTab === 'trophies' ? 'active' : ''} onClick={() => window.location.hash = '#/builder/trophies'}>
           <Award size={16} /> Custom Trophies
         </button>
       </div>
