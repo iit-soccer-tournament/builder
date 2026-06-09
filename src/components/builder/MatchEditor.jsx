@@ -106,14 +106,11 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
         setScorerGender2('Men');
     };
 
-    const removeOneGoal = (editScorers, setEditScorers,   name, isOg) => {
-        console.log("Removing Team 2 goal:", name, "isOg:", isOg);
-        console.log(editScorers);
+    const removeOneGoal = (editScorers, setEditScorers, name, isOg) => {
         const idx = editScorers.findIndex(item => {
             if (typeof item !== 'object') return false;
-            return item.name === name || item.isOwnGoal===isOg;
+            return item.name === name || (typeof isOg == "boolean" && item.isOwnGoal === isOg);
         });
-        console.log("Found index for Team 2 goal removal:", idx);
         if (idx !== -1) {
             setEditScorers(editScorers.filter((_, i) => i !== idx));
         }
