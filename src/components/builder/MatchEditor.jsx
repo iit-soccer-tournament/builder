@@ -46,9 +46,9 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
         const ogs = [];
         list.forEach(item => {
             if (!item) return;
-            const name = typeof item === 'object' && item !== null ? item.name : item;
-            const isOg = typeof item === 'object' && item !== null ? !!item.isOwnGoal : false;
-            const gender = typeof item === 'object' && item !== null ? item.gender || 'Men' : 'Men';
+            const name = typeof item === 'object' ? item.name : item;
+            const isOg = typeof item === 'object' ? !!item.isOwnGoal : false;
+            const gender = typeof item === 'object' ? item.gender || 'Men' : 'Men';
             if (isOg) {
                 ogs.push(`${name} (OG)`);
             } else {
