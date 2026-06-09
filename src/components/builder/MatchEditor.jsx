@@ -411,7 +411,7 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                                                         <input
                                                                             type="text"
                                                                             placeholder="Scorer Name"
-                                                                            list="registered-players-list"
+                                                                            list="registered-players-list-team1"
                                                                             value={newScorer1}
                                                                             onChange={e => {
                                                                                 const val = e.target.value;
@@ -569,7 +569,7 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                                                         <input
                                                                             type="text"
                                                                             placeholder="Scorer Name"
-                                                                            list="registered-players-list"
+                                                                            list="registered-players-list-team2"
                                                                             value={newScorer2}
                                                                             onChange={e => {
                                                                                 const val = e.target.value;
@@ -892,8 +892,11 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
             </div>
 
             {/* Suggestions datalist */}
-            <datalist id="registered-players-list">
-                {scorers.map(s => <option key={s.id} value={s.name}/>)}
+            <datalist id="registered-players-list-team1">
+                {scorers.filter(s => s.team === editTeam1).map(s => <option key={s.id} value={s.name}/>)}
+            </datalist>
+            <datalist id="registered-players-list-team2">
+                {scorers.filter(s => s.team === editTeam2).map(s => <option key={s.id} value={s.name}/>)}
             </datalist>
         </div>
     );

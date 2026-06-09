@@ -27,6 +27,17 @@ function PublicHome({ edition, getTeamName, fieldInfo }) {
                 <p className="text-muted text-center py-4">No matches logged for this edition.</p>
               ) : (
                 <>
+                  {upcomingScheduled.map(m => (
+                    <div key={m.id} className="quick-match-row scheduled">
+                      <div className="qm-meta">Upcoming • {m.date} {m.time} (Pitch {m.pitch})</div>
+                      <div className="qm-teams">
+                        <span className="team-name text-right">{getTeamName(m.team1, m.team1Text)}</span>
+                        <span className="vs-badge">vs</span>
+                        <span className="team-name text-left">{getTeamName(m.team2, m.team2Text)}</span>
+                      </div>
+                    </div>
+                  ))}
+
                   {recentPlayed.map(m => {
                     const renderHomeMatchScorers = (match) => {
                       const scorers1 = match.scorers1 || [];
@@ -86,17 +97,6 @@ function PublicHome({ edition, getTeamName, fieldInfo }) {
                       </div>
                     );
                   })}
-                  
-                  {upcomingScheduled.map(m => (
-                    <div key={m.id} className="quick-match-row scheduled">
-                      <div className="qm-meta">Upcoming • {m.date} {m.time} (Pitch {m.pitch})</div>
-                      <div className="qm-teams">
-                        <span className="team-name text-right">{getTeamName(m.team1, m.team1Text)}</span>
-                        <span className="vs-badge">vs</span>
-                        <span className="team-name text-left">{getTeamName(m.team2, m.team2Text)}</span>
-                      </div>
-                    </div>
-                  ))}
                 </>
               )}
             </div>

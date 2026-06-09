@@ -707,6 +707,10 @@ function BuilderMain({
               const updated = currentEdition.teams.filter(t => t.id !== id);
               updateCurrentEdition({ teams: updated });
             }}
+            onUpdateTeam={(id, updatedFields) => {
+              const updated = currentEdition.teams.map(t => t.id === id ? { ...t, ...updatedFields } : t);
+              updateCurrentEdition({ teams: updated });
+            }}
           />
         )}
 

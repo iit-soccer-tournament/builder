@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 
-function TeamEditor({ teams = [], onAddTeam, onDeleteTeam }) {
+function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
   const [name, setName] = useState('');
   const [logoColor, setLogoColor] = useState('#3b82f6');
 
@@ -62,16 +62,23 @@ function TeamEditor({ teams = [], onAddTeam, onDeleteTeam }) {
               {teams.map((t) => (
                 <tr key={t.id}>
                   <td>
-                    <div style={{ 
-                      width: '24px', 
-                      height: '24px', 
-                      borderRadius: '50%', 
-                      backgroundColor: t.logoColor,
-                      margin: '0 auto',
-                      border: '1px solid rgba(0,0,0,0.1)'
-                    }} />
+                    <input 
+                      type="color" 
+                      value={t.logoColor} 
+                      onChange={(e) => onUpdateTeam && onUpdateTeam(t.id, { logoColor: e.target.value })} 
+                      style={{ padding: '0', width: '32px', height: '32px', border: '1px solid rgba(0,0,0,0.15)', cursor: 'pointer', borderRadius: '50%', overflow: 'hidden', display: 'block', margin: '0 auto' }}
+                    />
                   </td>
-                  <td className="text-left font-bold">{t.name}</td>
+                  <td className="text-left font-bold">
+                    <input 
+                      type="text" 
+                      value={t.name} 
+                      onChange={(e) => onUpdateTeam && onUpdateTeam(t.id, { name: e.target.value })}
+                      style={{ background: 'transparent', border: 'none', borderBottom: '1px dashed transparent', fontWeight: 'bold', width: '100%', padding: '4px' }}
+                      onFocus={(e) => e.target.style.borderBottom = '1px dashed var(--accent-color)'}
+                      onBlur={(e) => e.target.style.borderBottom = '1px dashed transparent'}
+                    />
+                  </td>
                   <td>
                     <button 
                       onClick={() => onDeleteTeam(t.id)} 
