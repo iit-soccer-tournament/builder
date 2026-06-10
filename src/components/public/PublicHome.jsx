@@ -1,13 +1,34 @@
 import { MapPin } from 'lucide-react';
 
 function PublicHome({ edition, getTeamName, fieldInfo }) {
-  const recentPlayed = (edition.matches || [])
-    .filter(m => m.status === 'played')
-    .slice(-3);
+  const parseDateSafe = (dateStr) => {
+    if (!dateStr) return new Date(0);
+    const cleanDate = dateStr.split(',')[0].trim();
+    const parsed = new Date(`${cleanDate}, ${edition.year}`);
+    return isNaN(parsed) ? new Date(0) : parsed;
+  };
 
-  const upcomingScheduled = (edition.matches || [])
+  const allPlayed = (edition.matches || [])
+    .filter(m => m.status === 'played')
+    .sort((a, b) => {
+      const dateDiff = parseDateSafe(a.date) - parseDateSafe(b.date);
+      if (dateDiff !== 0) return dateDiff;
+      return a.time.localeCompare(b.time);
+    });
+
+  const latestPlayedDate = allPlayed.length > 0 ? allPlayed[allPlayed.length - 1].date : null;
+  const recentPlayed = latestPlayedDate ? allPlayed.filter(m => m.date === latestPlayedDate) : [];
+
+  const allScheduled = (edition.matches || [])
     .filter(m => m.status === 'scheduled')
-    .slice(0, 3);
+    .sort((a, b) => {
+      const dateDiff = parseDateSafe(a.date) - parseDateSafe(b.date);
+      if (dateDiff !== 0) return dateDiff;
+      return a.time.localeCompare(b.time);
+    });
+
+  const earliestScheduledDate = allScheduled.length > 0 ? allScheduled[0].date : null;
+  const upcomingScheduled = earliestScheduledDate ? allScheduled.filter(m => m.date === earliestScheduledDate) : [];
 
   const location = fieldInfo?.location || "Via Negrotto Serra Riccò, Genoa, Italy";
   const mapUrl = fieldInfo?.mapUrl || "https://www.google.com/maps/embed/v1/place?key=AIzaSyBs_lAfpuIjfx7DGisR7oUh1ZZ_C5qtGKc&q=Via+Negrotto+Serra+Ricc%C3%B2%2C+Genoa%2C+Italy&maptype=roadmap";
