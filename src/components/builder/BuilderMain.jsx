@@ -417,7 +417,7 @@ function BuilderMain({
           <div className="home-grid">
             {/* Year management */}
             <div className="home-column">
-              <div className="card text-left">
+              <div className="card text-left" style={{ height: 'auto' }}>
                 <div className="card-header">
                   <h3>Active Season Workspace</h3>
                 </div>
@@ -452,11 +452,120 @@ function BuilderMain({
                   </form>
                 </div>
               </div>
+
+              {/* Standing Rules & Playoff Configuration */}
+              <div className="card text-left" style={{ marginTop: '20px', height: 'auto' }}>
+                <div className="card-header">
+                  <h3>Season Standings & Promotion Rules</h3>
+                </div>
+                <div className="card-body">
+                  <div className="admin-form" style={{ background: '#f8fafc' }}>
+                    <div className="form-grid mb-4" style={{ gap: '14px', marginBottom: '16px' }}>
+                      <div>
+                        <label>Direct Promotion Count</label>
+                        <input 
+                          type="number" 
+                          min="0"
+                          value={currentEdition.advanceDirectCount !== undefined ? currentEdition.advanceDirectCount : 2} 
+                          onChange={e => updateCurrentEdition({ advanceDirectCount: parseInt(e.target.value, 10) || 0 })} 
+                        />
+                      </div>
+                      <div>
+                        <label>Playoffs Count</label>
+                        <input 
+                          type="number" 
+                          min="0"
+                          value={currentEdition.playoffCount !== undefined ? currentEdition.playoffCount : 4} 
+                          onChange={e => updateCurrentEdition({ playoffCount: parseInt(e.target.value, 10) || 0 })} 
+                        />
+                      </div>
+                      <div>
+                        <label>Play-outs Count</label>
+                        <input 
+                          type="number" 
+                          min="0"
+                          value={currentEdition.playoutCount !== undefined ? currentEdition.playoutCount : 2} 
+                          onChange={e => updateCurrentEdition({ playoutCount: parseInt(e.target.value, 10) || 0 })} 
+                        />
+                      </div>
+                      <div>
+                        <label>HoS Match Count (Last Teams)</label>
+                        <input 
+                          type="number" 
+                          min="0"
+                          value={currentEdition.hosCount !== undefined ? currentEdition.hosCount : 2} 
+                          onChange={e => updateCurrentEdition({ hosCount: parseInt(e.target.value, 10) || 0 })} 
+                        />
+                      </div>
+                    </div>
+
+                    <h4 style={{ marginTop: '20px', marginBottom: '12px' }}>Tie-Break Ordering Priority</h4>
+                    <p className="text-muted text-xs mb-3">Define the sequence of tie-breaker criteria (Points are always compared first).</p>
+                    
+                    {(() => {
+                      const tbOrder = currentEdition.tieBreakOrder || ['gd', 'h2h', 'gf'];
+                      const getLabel = (val) => {
+                        if (val === 'gd') return 'Goal Difference (GD)';
+                        if (val === 'h2h') return 'Head-to-Head (H2H) Points';
+                        if (val === 'gf') return 'Goals For (GF)';
+                        return val;
+                      };
+                      const handleTieBreakChange = (index, value) => {
+                        const currentOrder = [...tbOrder];
+                        const prevVal = currentOrder[index];
+                        const targetIdx = currentOrder.indexOf(value);
+                        if (targetIdx !== -1) {
+                          currentOrder[targetIdx] = prevVal;
+                        }
+                        currentOrder[index] = value;
+                        updateCurrentEdition({ tieBreakOrder: currentOrder });
+                      };
+                      return (
+                        <div className="space-y-3">
+                          <div style={{ marginBottom: '10px' }}>
+                            <label>1st Tie-breaker</label>
+                            <select 
+                              value={tbOrder[0]} 
+                              onChange={e => handleTieBreakChange(0, e.target.value)}
+                            >
+                              <option value="gd">{getLabel('gd')}</option>
+                              <option value="h2h">{getLabel('h2h')}</option>
+                              <option value="gf">{getLabel('gf')}</option>
+                            </select>
+                          </div>
+                          <div style={{ marginBottom: '10px' }}>
+                            <label>2nd Tie-breaker</label>
+                            <select 
+                              value={tbOrder[1]} 
+                              onChange={e => handleTieBreakChange(1, e.target.value)}
+                            >
+                              <option value="gd">{getLabel('gd')}</option>
+                              <option value="h2h">{getLabel('h2h')}</option>
+                              <option value="gf">{getLabel('gf')}</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label>3rd Tie-breaker</label>
+                            <select 
+                              value={tbOrder[2]} 
+                              onChange={e => handleTieBreakChange(2, e.target.value)}
+                            >
+                              <option value="gd">{getLabel('gd')}</option>
+                              <option value="h2h">{getLabel('h2h')}</option>
+                              <option value="gf">{getLabel('gf')}</option>
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Finished states */}
             <div className="home-column">
-              <div className="card text-left">
+              <div className="card text-left" style={{ height: 'auto' }}>
                 <div className="card-header">
                   <h3>Edition Lock &amp; Championship Details</h3>
                 </div>

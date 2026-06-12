@@ -711,10 +711,46 @@ function App() {
       t.gd = t.gf - t.ga;
     });
 
+    const getH2HDiff = (teamA, teamB) => {
+      let ptsA = 0;
+      let ptsB = 0;
+      const matches = currentEdition.matches || [];
+      matches.forEach(match => {
+        const isRegularSeason = match.round === "Regular Season" || (match.round && match.round.startsWith("Round "));
+        if (isRegularSeason && match.status === "played" && match.score1 !== null && match.score2 !== null) {
+          if (match.team1 === teamA.id && match.team2 === teamB.id) {
+            const s1 = parseInt(match.score1, 10);
+            const s2 = parseInt(match.score2, 10);
+            if (s1 > s2) ptsA += 3;
+            else if (s1 < s2) ptsB += 3;
+            else { ptsA += 1; ptsB += 1; }
+          } else if (match.team1 === teamB.id && match.team2 === teamA.id) {
+            const s1 = parseInt(match.score1, 10);
+            const s2 = parseInt(match.score2, 10);
+            if (s1 > s2) ptsB += 3;
+            else if (s1 < s2) ptsA += 3;
+            else { ptsA += 1; ptsB += 1; }
+          }
+        }
+      });
+      return ptsA - ptsB;
+    };
+
     return standingsList.sort((a, b) => {
       if (b.points !== a.points) return b.points - a.points;
-      if (b.gd !== a.gd) return b.gd - a.gd;
-      return b.gf - a.gf;
+
+      const order = currentEdition.tieBreakOrder || ['gd', 'h2h', 'gf'];
+      for (const criterion of order) {
+        if (criterion === 'gd') {
+          if (b.gd !== a.gd) return b.gd - a.gd;
+        } else if (criterion === 'gf') {
+          if (b.gf !== a.gf) return b.gf - a.gf;
+        } else if (criterion === 'h2h') {
+          const h2hDiff = getH2HDiff(a, b);
+          if (h2hDiff !== 0) return -h2hDiff;
+        }
+      }
+      return 0;
     });
   };
 

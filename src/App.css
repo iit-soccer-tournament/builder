@@ -518,6 +518,9 @@ body {
 .playouts {
   background: rgba(239, 68, 68, 0.03);
 }
+.hos-zone {
+  background: rgba(168, 85, 247, 0.04);
+}
 
 .pos-gd { color: #16a34a; font-weight: 750; }
 .neg-gd { color: #dc2626; font-weight: 750; }
@@ -548,6 +551,7 @@ body {
 .legend-color.direct { background: rgba(22, 163, 74, 0.2); border: 1.5px solid #16a34a; }
 .legend-color.playoff-zone { background: rgba(14, 165, 233, 0.2); border: 1.5px solid #0ea5e9; }
 .legend-color.playout-zone { background: rgba(239, 68, 68, 0.2); border: 1.5px solid #ef4444; }
+.legend-color.hos-zone { background: rgba(168, 85, 247, 0.2); border: 1.5px solid #a855f7; }
 
 /* Match fixtures block */
 .matches-body {

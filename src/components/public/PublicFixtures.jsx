@@ -70,11 +70,21 @@ function PublicFixtures({
               </thead>
               <tbody>
                 {standings.map((team, index) => {
-                  const posClass = index < 2 
-                    ? "advance-direct" 
-                    : index < 6 
-                      ? "playoffs" 
-                      : "playouts";
+                  const advanceDirectCount = edition.advanceDirectCount !== undefined ? parseInt(edition.advanceDirectCount, 10) : 2;
+                  const playoffCount = edition.playoffCount !== undefined ? parseInt(edition.playoffCount, 10) : 4;
+                  const playoutCountSetting = edition.playoutCount !== undefined ? parseInt(edition.playoutCount, 10) : 2;
+                  const hosCount = edition.hosCount !== undefined ? parseInt(edition.hosCount, 10) : 2;
+
+                  let posClass = "";
+                  if (index < advanceDirectCount) {
+                    posClass = "advance-direct";
+                  } else if (index < advanceDirectCount + playoffCount) {
+                    posClass = "playoffs";
+                  } else if (index < advanceDirectCount + playoffCount + playoutCountSetting) {
+                    posClass = "playouts";
+                  } else {
+                    posClass = "hos-zone";
+                  }
 
                   const isFiltered = selectedTeamFilter === team.id;
 
@@ -116,9 +126,40 @@ function PublicFixtures({
             </table>
           </div>
           <div className="card-footer legend-footer">
-            <div className="legend-item"><span className="legend-color direct"></span> Semifinals</div>
-            <div className="legend-item"><span className="legend-color playoff-zone"></span> Play-offs</div>
-            <div className="legend-item"><span className="legend-color playout-zone"></span> Play-outs</div>
+            {(() => {
+              const adc = edition.advanceDirectCount !== undefined ? parseInt(edition.advanceDirectCount, 10) : 2;
+              const pc = edition.playoffCount !== undefined ? parseInt(edition.playoffCount, 10) : 4;
+              const poc = edition.playoutCount !== undefined ? parseInt(edition.playoutCount, 10) : 2;
+              const hc = edition.hosCount !== undefined ? parseInt(edition.hosCount, 10) : 2;
+              return (
+                <>
+                  {adc > 0 && (
+                    <div className="legend-item">
+                      <span className="legend-color direct"></span> 
+                      Direct Promotion (Top {adc})
+                    </div>
+                  )}
+                  {pc > 0 && (
+                    <div className="legend-item">
+                      <span className="legend-color playoff-zone"></span> 
+                      Play-offs (Next {pc})
+                    </div>
+                  )}
+                  {poc > 0 && (
+                    <div className="legend-item">
+                      <span className="legend-color playout-zone"></span> 
+                      Play-outs (Next {poc})
+                    </div>
+                  )}
+                  {hc > 0 && (
+                    <div className="legend-item">
+                      <span className="legend-color hos-zone"></span> 
+                      HoS Match (Last {hc})
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
