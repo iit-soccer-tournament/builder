@@ -1,15 +1,32 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Plus, Trash2, Check, X, Calendar, Trophy} from 'lucide-react';
 
-function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDeleteMatch, onSaveMatch}) {
+function MatchEditor({
+    matches = [],
+    teams = [],
+    scorers = [],
+    onAddMatch,
+    onDeleteMatch,
+    onSaveMatch,
+    pitches = ['B', 'C'],
+    rounds = [
+        'Regular Season',
+        'Playoff (Quarter)',
+        'Playout (HoS)',
+        'Semifinal',
+        '3rd Place Final',
+        'Hall of Shame Final',
+        'Championship Final'
+    ]
+}) {
     const [editingId, setEditingId] = useState(null);
     const [editType, setEditType] = useState(null); // 'info' or 'results'
 
     // Edit Form states
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
-    const [editPitch, setEditPitch] = useState('C');
-    const [editRound, setEditRound] = useState('Regular Season');
+    const [editPitch, setEditPitch] = useState(pitches[0] || 'C');
+    const [editRound, setEditRound] = useState(rounds[0] || 'Regular Season');
     const [editTeam1, setEditTeam1] = useState('');
     const [editTeam2, setEditTeam2] = useState('');
     const [editTeam1Text, setEditTeam1Text] = useState('');
@@ -27,13 +44,21 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
     const [newMatch, setNewMatch] = useState({
         date: '',
         time: '19:00',
-        pitch: 'C',
+        pitch: pitches[0] || 'C',
         team1: '',
         team2: '',
         team1Text: '',
         team2Text: '',
-        round: 'Regular Season'
+        round: rounds[0] || 'Regular Season'
     });
+
+    useEffect(() => {
+        setNewMatch(prev => ({
+            ...prev,
+            pitch: pitches.includes(prev.pitch) ? prev.pitch : (pitches[0] || 'C'),
+            round: rounds.includes(prev.round) ? prev.round : (rounds[0] || 'Regular Season')
+        }));
+    }, [pitches, rounds]);
 
     const getTeamName = (teamId, fallback = '') => {
         const t = teams.find(x => x.id === teamId);
@@ -75,12 +100,12 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
         setNewMatch({
             date: '',
             time: '19:00',
-            pitch: 'C',
+            pitch: pitches[0] || 'C',
             team1: '',
             team2: '',
             team1Text: '',
             team2Text: '',
-            round: 'Regular Season'
+            round: rounds[0] || 'Regular Season'
         });
     };
 
@@ -89,8 +114,8 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
         setEditType(type);
         setEditDate(m.date || '');
         setEditTime(m.time || '19:00');
-        setEditPitch(m.pitch || 'C');
-        setEditRound(m.round || 'Regular Season');
+        setEditPitch(m.pitch || pitches[0] || 'C');
+        setEditRound(m.round || rounds[0] || 'Regular Season');
         setEditTeam1(m.team1 || '');
         setEditTeam2(m.team2 || '');
         setEditTeam1Text(m.team1Text || '');
@@ -184,21 +209,18 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                             <label>Pitch</label>
                             <select value={newMatch.pitch}
                                     onChange={(e) => setNewMatch({...newMatch, pitch: e.target.value})}>
-                                <option value="B">Pitch B</option>
-                                <option value="C">Pitch C</option>
+                                {pitches.map((p, idx) => (
+                                    <option key={idx} value={p}>Pitch {p}</option>
+                                ))}
                             </select>
                         </div>
                         <div>
                             <label>Round / Stage</label>
                             <select value={newMatch.round}
                                     onChange={(e) => setNewMatch({...newMatch, round: e.target.value})}>
-                                <option value="Regular Season">Regular Season</option>
-                                <option value="Playoff (Quarter)">Playoff (Quarter)</option>
-                                <option value="Playout (HoS)">Playout (HoS)</option>
-                                <option value="Semifinal">Semifinal</option>
-                                <option value="3rd Place Final">3rd Place Final</option>
-                                <option value="Hall of Shame Final">Hall of Shame Final</option>
-                                <option value="Championship Final">Championship Final</option>
+                                {rounds.map((r, idx) => (
+                                    <option key={idx} value={r}>{r}</option>
+                                ))}
                             </select>
                         </div>
 
@@ -298,8 +320,9 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                                                         className="text-xs font-bold block mb-1">Pitch</label>
                                                                     <select value={editPitch}
                                                                             onChange={e => setEditPitch(e.target.value)}>
-                                                                        <option value="B">Pitch B</option>
-                                                                        <option value="C">Pitch C</option>
+                                                                        {pitches.map((p, idx) => (
+                                                                            <option key={idx} value={p}>Pitch {p}</option>
+                                                                        ))}
                                                                     </select>
                                                                 </div>
                                                                 <div>
@@ -307,23 +330,9 @@ function MatchEditor({matches = [], teams = [], scorers = [], onAddMatch, onDele
                                                                         className="text-xs font-bold block mb-1">Round</label>
                                                                     <select value={editRound}
                                                                             onChange={e => setEditRound(e.target.value)}>
-                                                                        <option value="Regular Season">Regular Season
-                                                                        </option>
-                                                                        <option value="Playoff (Quarter)">Playoff
-                                                                            (Quarter)
-                                                                        </option>
-                                                                        <option value="Playout (HoS)">Playout (HoS)
-                                                                        </option>
-                                                                        <option value="Semifinal">Semifinal</option>
-                                                                        <option value="3rd Place Final">3rd Place
-                                                                            Final
-                                                                        </option>
-                                                                        <option value="Hall of Shame Final">Hall of
-                                                                            Shame Final
-                                                                        </option>
-                                                                        <option value="Championship Final">Championship
-                                                                            Final
-                                                                        </option>
+                                                                        {rounds.map((r, idx) => (
+                                                                            <option key={idx} value={r}>{r}</option>
+                                                                        ))}
                                                                     </select>
                                                                 </div>
                                                             </div>

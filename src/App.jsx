@@ -31,13 +31,57 @@ import './App.css';
 
 const isBuilderAvailable = import.meta.env.VITE_BUILDER === 'true';
 
+const ensureSeasonMetadata = (season) => {
+  if (!season) return season;
+  const defaultPitches = ['B', 'C'];
+  const defaultRounds = [
+    'Regular Season',
+    'Playoff (Quarter)',
+    'Playout (HoS)',
+    'Semifinal',
+    '3rd Place Final',
+    'Hall of Shame Final',
+    'Championship Final'
+  ];
+
+  const matches = season.matches || [];
+  const uniquePitchesInMatches = Array.from(new Set(matches.map(m => m.pitch).filter(Boolean)));
+  const uniqueRoundsInMatches = Array.from(new Set(matches.map(m => m.round).filter(Boolean)));
+
+  const pitchesSet = new Set(season.pitches || defaultPitches);
+  uniquePitchesInMatches.forEach(p => pitchesSet.add(p));
+  const finalPitches = Array.from(pitchesSet);
+
+  const roundsSet = new Set(season.rounds || defaultRounds);
+  uniqueRoundsInMatches.forEach(r => roundsSet.add(r));
+  const finalRounds = Array.from(roundsSet);
+
+  return {
+    ...season,
+    pitches: finalPitches,
+    rounds: finalRounds
+  };
+};
+
 function App() {
   const lastSavedRef = useRef(null);
 
   // 1. Data Store initialized from localStorage
   const [editions, setEditions] = useState(() => {
     const saved = localStorage.getItem('iit_editions');
-    return saved ? JSON.parse(saved) : initialEditions;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const migrated = {};
+        Object.keys(parsed).forEach(yr => {
+          migrated[yr] = ensureSeasonMetadata(parsed[yr]);
+        });
+        return migrated;
+      } catch (e) {
+        console.error("Error parsing iit_editions from localStorage:", e);
+      }
+    }
+    return initialEditions;
   });
 
   const [activeEditionYear, setActiveEditionYear] = useState(() => {
@@ -150,10 +194,10 @@ function App() {
 
             const editionsMap = {};
             if (activeSeasonRow) {
-              editionsMap[year] = activeSeasonRow.data;
+              editionsMap[year] = ensureSeasonMetadata(activeSeasonRow.data);
             } else {
               // Ensure active season exists in map
-              const activeSeasonData = {
+              const activeSeasonData = ensureSeasonMetadata({
                 year: year,
                 isFinished: false,
                 teams: [],
@@ -161,7 +205,7 @@ function App() {
                 scorers: [],
                 drunkContest: [],
                 customTrophies: []
-              };
+              });
               if (isBuilderAvailable) {
                 await supabase.from('tournament_seasons').upsert({ year: year, data: activeSeasonData });
               }
@@ -216,7 +260,7 @@ function App() {
             };
             await supabase.from('tournament_data').upsert(defaultBasic);
 
-            const defaultSeason = {
+            const defaultSeason = ensureSeasonMetadata({
               year: 2026,
               isFinished: false,
               teams: [],
@@ -224,7 +268,7 @@ function App() {
               scorers: [],
               drunkContest: [],
               customTrophies: []
-            };
+            });
             await supabase.from('tournament_seasons').upsert({ year: 2026, data: defaultSeason });
 
             setEditions({ "2026": defaultSeason });
@@ -255,13 +299,17 @@ function App() {
       const hasLocalData = isBuilderAvailable && localStorage.getItem('iit_editions');
       if (hasLocalData) {
         const localEditions = JSON.parse(localStorage.getItem('iit_editions') || '{}');
+        const processedLocalEditions = {};
+        Object.keys(localEditions).forEach(yr => {
+          processedLocalEditions[yr] = ensureSeasonMetadata(localEditions[yr]);
+        });
         const localActiveYear = parseInt(localStorage.getItem('iit_active_year') || '2026', 10);
         const localPalmares = JSON.parse(localStorage.getItem('iit_palmares_overview') || '[]');
         const localRules = localStorage.getItem('iit_global_rules') || '';
         const localField = JSON.parse(localStorage.getItem('iit_global_field_info') || '{}');
 
         setSeasonsList(JSON.parse(localStorage.getItem('iit_seasons_list') || '{}'));
-        setEditions(localEditions);
+        setEditions(processedLocalEditions);
         setActiveEditionYear(localActiveYear);
         setPalmaresOverview(localPalmares);
         setGlobalRules(localRules);
@@ -272,7 +320,7 @@ function App() {
           palmaresOverview: localPalmares,
           globalRules: localRules,
           globalFieldInfo: localField,
-          editions: localEditions
+          editions: processedLocalEditions
         });
         lastSavedRef.current = snapshot;
 
@@ -316,7 +364,12 @@ function App() {
               fieldInfoCopy.pitchImage = fixImagePath(fieldInfoCopy.pitchImage);
             }
 
-            setEditions(editionsCopy);
+            const processedEditions = {};
+            Object.keys(editionsCopy).forEach(yr => {
+              processedEditions[yr] = ensureSeasonMetadata(editionsCopy[yr]);
+            });
+
+            setEditions(processedEditions);
             if (data.activeEditionYear) {
               setActiveEditionYear(data.activeEditionYear);
             }
@@ -331,8 +384,8 @@ function App() {
             }
 
             const initialSeasonsList = {};
-            Object.keys(editionsCopy).forEach(yr => {
-              const ed = editionsCopy[yr];
+            Object.keys(processedEditions).forEach(yr => {
+              const ed = processedEditions[yr];
               initialSeasonsList[yr] = {
                 year: ed.year,
                 isFinished: ed.isFinished || false,
@@ -350,12 +403,12 @@ function App() {
               palmaresOverview: data.palmaresOverview || [],
               globalRules: data.globalRules || "",
               globalFieldInfo: fieldInfoCopy || {},
-              editions: editionsCopy
+              editions: processedEditions
             });
             lastSavedRef.current = snapshot;
 
             if (isBuilderAvailable) {
-              localStorage.setItem('iit_editions', JSON.stringify(editionsCopy));
+              localStorage.setItem('iit_editions', JSON.stringify(processedEditions));
               if (data.activeEditionYear) {
                 localStorage.setItem('iit_active_year', data.activeEditionYear.toString());
               }
@@ -398,17 +451,18 @@ function App() {
           .single();
           
         if (seasonData) {
+          const migratedData = ensureSeasonMetadata(seasonData.data);
           setEditions(prev => {
             const updated = {
               ...prev,
-              [activeEditionYear]: seasonData.data
+              [activeEditionYear]: migratedData
             };
             if (lastSavedRef.current) {
               try {
                 const lastSaved = JSON.parse(lastSavedRef.current);
                 lastSaved.editions = {
                   ...lastSaved.editions,
-                  [activeEditionYear]: seasonData.data
+                  [activeEditionYear]: migratedData
                 };
                 lastSavedRef.current = JSON.stringify(lastSaved);
               } catch (e) {
@@ -446,7 +500,7 @@ function App() {
             setEditions(prev => {
               const updated = { ...prev };
               seasonsData.forEach(row => {
-                updated[row.year] = row.data;
+                updated[row.year] = ensureSeasonMetadata(row.data);
               });
               if (lastSavedRef.current) {
                 try {
@@ -763,7 +817,12 @@ function App() {
       reader.onload = (event) => {
         try {
           const data = JSON.parse(event.target.result);
-          setEditions(data.editions || {});
+          const importedEditions = data.editions || {};
+          const processedImported = {};
+          Object.keys(importedEditions).forEach(yr => {
+            processedImported[yr] = ensureSeasonMetadata(importedEditions[yr]);
+          });
+          setEditions(processedImported);
           if (data.activeEditionYear) setActiveEditionYear(data.activeEditionYear);
           setPalmaresOverview(data.palmaresOverview || []);
           setGlobalRules(data.globalRules || "");
@@ -784,7 +843,7 @@ function App() {
 
   const handleStartFresh = () => {
     const freshEditions = {
-      "2026": {
+      "2026": ensureSeasonMetadata({
         year: 2026,
         isFinished: false,
         teams: [],
@@ -793,7 +852,7 @@ function App() {
         drunkContest: [],
         rules: "Tournament rules\n\n    The following rules are set as precautionary measure.\n\n       \n\n    The primary principles shall be common sense and respect of the other participants.",
         customTrophies: []
-      }
+      })
     };
     setEditions(freshEditions);
     setActiveEditionYear(2026);
@@ -1039,7 +1098,7 @@ function App() {
 
           let activeSeasonData = {};
           if (seasonData) {
-            activeSeasonData = seasonData.data || {};
+            activeSeasonData = ensureSeasonMetadata(seasonData.data || {});
           }
 
           // Now apply all state changes at once

@@ -197,7 +197,17 @@ function BuilderMain({
       matches: [],
       scorers: [],
       drunkContest: [],
-      customTrophies: []
+      customTrophies: [],
+      pitches: ['B', 'C'],
+      rounds: [
+        'Regular Season',
+        'Playoff (Quarter)',
+        'Playout (HoS)',
+        'Semifinal',
+        '3rd Place Final',
+        'Hall of Shame Final',
+        'Championship Final'
+      ]
     };
 
     setEditions({
@@ -450,6 +460,184 @@ function BuilderMain({
                       <button type="submit" className="success-btn"><Plus size={14} /> Create Edition</button>
                     </div>
                   </form>
+                </div>
+              </div>
+
+              {/* Pitches & Rounds/Stages Configuration */}
+              <div className="card text-left" style={{ marginTop: '20px', height: 'auto' }}>
+                <div className="card-header">
+                  <h3>Pitches &amp; Rounds/Stages Configuration</h3>
+                </div>
+                <div className="card-body">
+                  <div className="admin-form" style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px' }}>
+                    {/* Pitches list */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <h4 style={{ marginBottom: '8px' }}>Pitches List</h4>
+                      <div className="flex-gap mb-2">
+                        <input
+                          type="text"
+                          id="new-pitch-input"
+                          placeholder="Add new pitch name (e.g. Pitch A)"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = e.target.value.trim();
+                              if (val) {
+                                const currentPitches = currentEdition.pitches || [];
+                                if (!currentPitches.includes(val)) {
+                                  updateCurrentEdition({ pitches: [...currentPitches, val] });
+                                }
+                                e.target.value = '';
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="success-btn"
+                          style={{ margin: 0 }}
+                          onClick={() => {
+                            const input = document.getElementById('new-pitch-input');
+                            const val = input.value.trim();
+                            if (val) {
+                              const currentPitches = currentEdition.pitches || [];
+                              if (!currentPitches.includes(val)) {
+                                updateCurrentEdition({ pitches: [...currentPitches, val] });
+                              }
+                              input.value = '';
+                            }
+                          }}
+                        >
+                          Add Pitch
+                        </button>
+                      </div>
+                      <div className="flex-gap" style={{ flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                        {(currentEdition.pitches || []).map((pitch, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              background: '#e2e8f0',
+                              padding: '4px 10px',
+                              borderRadius: '20px',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              color: '#334155',
+                              border: '1px solid #cbd5e1'
+                            }}
+                          >
+                            {pitch}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = (currentEdition.pitches || []).filter(p => p !== pitch);
+                                updateCurrentEdition({ pitches: updated });
+                              }}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                marginLeft: '6px',
+                                fontWeight: 'bold',
+                                padding: '0 2px'
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                        {(currentEdition.pitches || []).length === 0 && (
+                          <span className="text-muted text-xs">No pitches configured for this season.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Rounds list */}
+                    <div>
+                      <h4 style={{ marginBottom: '8px' }}>Rounds / Stages List</h4>
+                      <div className="flex-gap mb-2">
+                        <input
+                          type="text"
+                          id="new-round-input"
+                          placeholder="Add new round/stage (e.g. Quarterfinal)"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = e.target.value.trim();
+                              if (val) {
+                                const currentRounds = currentEdition.rounds || [];
+                                if (!currentRounds.includes(val)) {
+                                  updateCurrentEdition({ rounds: [...currentRounds, val] });
+                                }
+                                e.target.value = '';
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="success-btn"
+                          style={{ margin: 0 }}
+                          onClick={() => {
+                            const input = document.getElementById('new-round-input');
+                            const val = input.value.trim();
+                            if (val) {
+                              const currentRounds = currentEdition.rounds || [];
+                              if (!currentRounds.includes(val)) {
+                                updateCurrentEdition({ rounds: [...currentRounds, val] });
+                              }
+                              input.value = '';
+                            }
+                          }}
+                        >
+                          Add Round
+                        </button>
+                      </div>
+                      <div className="flex-gap" style={{ flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                        {(currentEdition.rounds || []).map((round, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              background: '#e2e8f0',
+                              padding: '4px 10px',
+                              borderRadius: '20px',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              color: '#334155',
+                              border: '1px solid #cbd5e1'
+                            }}
+                          >
+                            {round}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = (currentEdition.rounds || []).filter(r => r !== round);
+                                updateCurrentEdition({ rounds: updated });
+                              }}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                marginLeft: '6px',
+                                fontWeight: 'bold',
+                                padding: '0 2px'
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                        {(currentEdition.rounds || []).length === 0 && (
+                          <span className="text-muted text-xs">No rounds configured for this season.</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -829,6 +1017,8 @@ function BuilderMain({
             matches={currentEdition.matches}
             teams={currentEdition.teams}
             scorers={currentEdition.scorers || []}
+            pitches={currentEdition.pitches}
+            rounds={currentEdition.rounds}
             onAddMatch={(m) => {
               const id = 'm_' + Date.now();
               const updated = [...currentEdition.matches, { ...m, id, score1: null, score2: null, status: 'scheduled' }];
