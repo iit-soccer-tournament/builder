@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+import { useState } from 'react';
+import { X, ChevronDown, ChevronRight } from 'lucide-react';
 
 function PublicFixtures({ 
   edition, 
@@ -8,6 +9,7 @@ function PublicFixtures({
   getTeamName, 
   getTeamColor 
 }) {
+  const [collapsedState, setCollapsedState] = useState({});
   
   // Group matches by date
   const getGroupedMatches = () => {
@@ -43,6 +45,17 @@ function PublicFixtures({
   };
 
   const groupedMatches = getGroupedMatches();
+  const dateKeys = Object.keys(groupedMatches);
+
+  // Find the index of the last date that has at least one played match
+  let lastPlayedIndex = -1;
+  for (let i = dateKeys.length - 1; i >= 0; i--) {
+    const dateMatches = groupedMatches[dateKeys[i]] || [];
+    if (dateMatches.some(m => m.status === 'played')) {
+      lastPlayedIndex = i;
+      break;
+    }
+  }
 
   return (
     <div className="fixtures-layout">
@@ -185,90 +198,119 @@ function PublicFixtures({
             {Object.keys(groupedMatches).length === 0 ? (
               <p className="no-matches text-center py-6 text-muted">No fixtures logged for this filter.</p>
             ) : (
-              Object.keys(groupedMatches).map(date => (
-                <div key={date} className="date-group">
-                  <h3 className="date-header">{date}</h3>
-                  <div className="matches-grid">
-                    {groupedMatches[date].map(match => {
-                      const renderMatchScorers = (m) => {
-                        if (m.status !== 'played') return null;
-                        const scorers1 = m.scorers1 || [];
-                        const scorers2 = m.scorers2 || [];
-                        if (scorers1.length === 0 && scorers2.length === 0) return null;
+              Object.keys(groupedMatches).map(date => {
+                const isExpanded = collapsedState[date] !== undefined
+                  ? collapsedState[date]
+                  : (lastPlayedIndex === -1 ? true : dateKeys.indexOf(date) >= lastPlayedIndex);
 
-                        const countScorers = (list) => {
-                          const counts = {};
-                          const ogs = [];
-                          list.forEach(item => {
-                            if (!item) return;
-                            const name = typeof item === 'object' && item !== null ? item.name : item;
-                            const isOg = typeof item === 'object' && item !== null ? !!item.isOwnGoal : false;
-                            const gender = typeof item === 'object' && item !== null ? item.gender || 'Men' : 'Men';
-                            if (isOg) {
-                              ogs.push(`${name} (OG)`);
-                            } else {
-                              const key = `${name}_${gender}`;
-                              counts[key] = (counts[key] || 0) + 1;
-                            }
-                          });
-                          const regularList = Object.entries(counts).map(([key, count]) => {
-                            const idx = key.lastIndexOf('_');
-                            const name = key.substring(0, idx);
-                            return `${name} ${count > 1 ? `(${count})` : ''}`.trim();
-                          });
-                          return [...regularList, ...ogs].join(', ');
-                        };
+                const toggleDate = () => {
+                  setCollapsedState(prev => ({
+                    ...prev,
+                    [date]: !isExpanded
+                  }));
+                };
 
-                        const text1 = countScorers(scorers1);
-                        const text2 = countScorers(scorers2);
+                return (
+                  <div key={date} className="date-group" style={{ marginBottom: isExpanded ? '24px' : '12px' }}>
+                    <h3 
+                      className="date-header" 
+                      onClick={toggleDate}
+                      style={{ 
+                        cursor: 'pointer', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <span>{date}</span>
+                      {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                    </h3>
+                    
+                    {isExpanded && (
+                      <div className="matches-grid">
+                        {groupedMatches[date].map(match => {
+                          const renderMatchScorers = (m) => {
+                            if (m.status !== 'played') return null;
+                            const scorers1 = m.scorers1 || [];
+                            const scorers2 = m.scorers2 || [];
+                            if (scorers1.length === 0 && scorers2.length === 0) return null;
 
-                        if (!text1 && !text2) return null;
+                            const countScorers = (list) => {
+                              const counts = {};
+                              const ogs = [];
+                              list.forEach(item => {
+                                if (!item) return;
+                                const name = typeof item === 'object' && item !== null ? item.name : item;
+                                const isOg = typeof item === 'object' && item !== null ? !!item.isOwnGoal : false;
+                                const gender = typeof item === 'object' && item !== null ? item.gender || 'Men' : 'Men';
+                                if (isOg) {
+                                  ogs.push(`${name} (OG)`);
+                                } else {
+                                  const key = `${name}_${gender}`;
+                                  counts[key] = (counts[key] || 0) + 1;
+                                }
+                              });
+                              const regularList = Object.entries(counts).map(([key, count]) => {
+                                const idx = key.lastIndexOf('_');
+                                const name = key.substring(0, idx);
+                                return `${name} ${count > 1 ? `(${count})` : ''}`.trim();
+                              });
+                              return [...regularList, ...ogs].join(', ');
+                            };
 
-                        return (
-                          <div className="match-scorers-view">
-                            <div className="scorers-left">
-                              {text1}
+                            const text1 = countScorers(scorers1);
+                            const text2 = countScorers(scorers2);
+
+                            if (!text1 && !text2) return null;
+
+                            return (
+                              <div className="match-scorers-view">
+                                <div className="scorers-left">
+                                  {text1}
+                                </div>
+                                <div className="scorers-spacer"></div>
+                                <div className="scorers-right">
+                                  {text2}
+                                </div>
+                              </div>
+                            );
+                          };
+
+                          return (
+                            <div key={match.id} className="match-card">
+                              <div className="match-meta">
+                                <span className="round-tag">{match.round}</span>
+                                <span className="pitch-tag">Pitch {match.pitch} • {match.time}</span>
+                              </div>
+                              <div className="match-teams-score">
+                                <div className="team-row left-align">
+                                  <span className="team-color" style={{ backgroundColor: getTeamColor(match.team1) }}></span>
+                                  <span className="name">{getTeamName(match.team1, match.team1Text)}</span>
+                                </div>
+                                
+                                <div className="score-display">
+                                  {match.status === 'played' ? (
+                                    <span className="score font-bold">{match.score1} - {match.score2}</span>
+                                  ) : (
+                                    <span className="score text-muted">vs</span>
+                                  )}
+                                </div>
+
+                                <div className="team-row right-align">
+                                  <span className="name">{getTeamName(match.team2, match.team2Text)}</span>
+                                  <span className="team-color" style={{ backgroundColor: getTeamColor(match.team2) }}></span>
+                                </div>
+                              </div>
+                              {renderMatchScorers(match)}
                             </div>
-                            <div className="scorers-spacer"></div>
-                            <div className="scorers-right">
-                              {text2}
-                            </div>
-                          </div>
-                        );
-                      };
-
-                      return (
-                        <div key={match.id} className="match-card">
-                          <div className="match-meta">
-                            <span className="round-tag">{match.round}</span>
-                            <span className="pitch-tag">Pitch {match.pitch} • {match.time}</span>
-                          </div>
-                          <div className="match-teams-score">
-                            <div className="team-row left-align">
-                              <span className="team-color" style={{ backgroundColor: getTeamColor(match.team1) }}></span>
-                              <span className="name">{getTeamName(match.team1, match.team1Text)}</span>
-                            </div>
-                            
-                            <div className="score-display">
-                              {match.status === 'played' ? (
-                                <span className="score font-bold">{match.score1} - {match.score2}</span>
-                              ) : (
-                                <span className="score text-muted">vs</span>
-                              )}
-                            </div>
-
-                            <div className="team-row right-align">
-                              <span className="name">{getTeamName(match.team2, match.team2Text)}</span>
-                              <span className="team-color" style={{ backgroundColor: getTeamColor(match.team2) }}></span>
-                            </div>
-                          </div>
-                          {renderMatchScorers(match)}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

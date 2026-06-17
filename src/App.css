@@ -570,6 +570,12 @@ body {
   border-bottom: 2px solid rgba(21, 128, 61, 0.15);
   padding-bottom: 8px;
   margin: 0 0 14px 0;
+  transition: color 0.2s, border-bottom-color 0.2s;
+}
+
+.date-header:hover {
+  color: #166534;
+  border-bottom-color: rgba(21, 128, 61, 0.4);
 }
 
 .matches-grid {
