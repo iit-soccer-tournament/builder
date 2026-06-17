@@ -96,6 +96,9 @@ function BuilderMain({
   }, []);
 
   const [newYear, setNewYear] = useState('');
+  const [newRoundName, setNewRoundName] = useState('');
+  const [newRoundType, setNewRoundType] = useState('group');
+  const [newRoundKnockoutType, setNewRoundKnockoutType] = useState('quarters');
 
   const rawEdition = editions[activeEditionYear] || {
     year: activeEditionYear,
@@ -557,81 +560,128 @@ function BuilderMain({
                     {/* Rounds list */}
                     <div>
                       <h4 style={{ marginBottom: '8px' }}>Rounds / Stages List</h4>
-                      <div className="flex-gap mb-2">
-                        <input
-                          type="text"
-                          id="new-round-input"
-                          placeholder="Add new round/stage (e.g. Quarterfinal)"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              const val = e.target.value.trim();
+                      <div className="form-grid mb-2" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr 1fr', gap: '12px', alignItems: 'end' }}>
+                        <div>
+                          <label className="text-xs font-bold block mb-1">Round Name</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Playoff (Quarter)"
+                            value={newRoundName}
+                            onChange={e => setNewRoundName(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold block mb-1">Type</label>
+                          <select 
+                            value={newRoundType} 
+                            onChange={e => setNewRoundType(e.target.value)}
+                            style={{ width: '100%', height: '40px', padding: '0 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                          >
+                            <option value="group">Group Stage</option>
+                            <option value="knockout">Knockout Stage</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold block mb-1">Knockout Level</label>
+                          <select 
+                            value={newRoundKnockoutType} 
+                            onChange={e => setNewRoundKnockoutType(e.target.value)}
+                            disabled={newRoundType !== 'knockout'}
+                            style={{ width: '100%', height: '40px', padding: '0 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}
+                          >
+                            <option value="round_of_16">Round of 16</option>
+                            <option value="quarters">Quarterfinals</option>
+                            <option value="semis">Semifinals</option>
+                            <option value="third_place">3rd Place Final</option>
+                            <option value="final">Final</option>
+                          </select>
+                        </div>
+                        <div>
+                          <button
+                            type="button"
+                            className="success-btn"
+                            style={{ margin: 0, width: '100%', height: '40px' }}
+                            onClick={() => {
+                              const val = newRoundName.trim();
                               if (val) {
                                 const currentRounds = currentEdition.rounds || [];
-                                if (!currentRounds.includes(val)) {
-                                  updateCurrentEdition({ rounds: [...currentRounds, val] });
+                                if (!currentRounds.some(r => (typeof r === 'object' ? r.name : r) === val)) {
+                                  const newObj = {
+                                    name: val,
+                                    type: newRoundType,
+                                    knockoutType: newRoundType === 'knockout' ? newRoundKnockoutType : null
+                                  };
+                                  updateCurrentEdition({ rounds: [...currentRounds, newObj] });
                                 }
-                                e.target.value = '';
+                                setNewRoundName('');
                               }
-                            }
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="success-btn"
-                          style={{ margin: 0 }}
-                          onClick={() => {
-                            const input = document.getElementById('new-round-input');
-                            const val = input.value.trim();
-                            if (val) {
-                              const currentRounds = currentEdition.rounds || [];
-                              if (!currentRounds.includes(val)) {
-                                updateCurrentEdition({ rounds: [...currentRounds, val] });
-                              }
-                              input.value = '';
-                            }
-                          }}
-                        >
-                          Add Round
-                        </button>
-                      </div>
-                      <div className="flex-gap" style={{ flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-                        {(currentEdition.rounds || []).map((round, idx) => (
-                          <span
-                            key={idx}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              background: '#e2e8f0',
-                              padding: '4px 10px',
-                              borderRadius: '20px',
-                              fontSize: '13px',
-                              fontWeight: '600',
-                              color: '#334155',
-                              border: '1px solid #cbd5e1'
                             }}
                           >
-                            {round}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const updated = (currentEdition.rounds || []).filter(r => r !== round);
-                                updateCurrentEdition({ rounds: updated });
-                              }}
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex-gap" style={{ flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                        {(currentEdition.rounds || []).map((round, idx) => {
+                          const rObj = typeof round === 'object' ? round : { name: round, type: 'group' };
+                          const badgeColor = rObj.type === 'knockout' ? '#ef4444' : '#3b82f6';
+                          const badgeLabel = rObj.type === 'knockout' 
+                            ? (rObj.knockoutType === 'round_of_16' ? 'Round of 16'
+                               : rObj.knockoutType === 'quarters' ? 'Quarters'
+                               : rObj.knockoutType === 'semis' ? 'Semis'
+                               : rObj.knockoutType === 'third_place' ? '3rd Place'
+                               : 'Final')
+                            : 'Group';
+
+                          return (
+                            <span
+                              key={idx}
                               style={{
-                                border: 'none',
-                                background: 'transparent',
-                                color: '#ef4444',
-                                cursor: 'pointer',
-                                marginLeft: '6px',
-                                fontWeight: 'bold',
-                                padding: '0 2px'
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                background: '#e2e8f0',
+                                padding: '4px 10px',
+                                borderRadius: '20px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                color: '#334155',
+                                border: '1px solid #cbd5e1',
+                                gap: '6px'
                               }}
                             >
-                              ✕
-                            </button>
-                          </span>
-                        ))}
+                              <span>{rObj.name}</span>
+                              <span 
+                                style={{
+                                  fontSize: '10px',
+                                  padding: '2px 6px',
+                                  background: badgeColor,
+                                  color: 'white',
+                                  borderRadius: '10px',
+                                  fontWeight: 'bold'
+                                }}
+                              >
+                                {badgeLabel}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = (currentEdition.rounds || []).filter(r => (typeof r === 'object' ? r.name : r) !== rObj.name);
+                                  updateCurrentEdition({ rounds: updated });
+                                }}
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: '#ef4444',
+                                  cursor: 'pointer',
+                                  fontWeight: 'bold',
+                                  padding: '0 2px'
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          );
+                        })}
                         {(currentEdition.rounds || []).length === 0 && (
                           <span className="text-muted text-xs">No rounds configured for this season.</span>
                         )}
@@ -995,9 +1045,9 @@ function BuilderMain({
         {activeBuilderTab === 'teams' && (
           <TeamEditor 
             teams={currentEdition.teams}
-            onAddTeam={(name, color) => {
+            onAddTeam={(name, color, group) => {
               const id = 't_' + Date.now();
-              const updated = [...currentEdition.teams, { id, name, logoColor: color }];
+              const updated = [...currentEdition.teams, { id, name, logoColor: color, group: group || '' }];
               updateCurrentEdition({ teams: updated });
             }}
             onDeleteTeam={(id) => {

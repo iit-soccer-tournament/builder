@@ -4,12 +4,14 @@ import { Plus, Trash2 } from 'lucide-react';
 function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
   const [name, setName] = useState('');
   const [logoColor, setLogoColor] = useState('#3b82f6');
+  const [group, setGroup] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onAddTeam(name.trim(), logoColor);
+    onAddTeam(name.trim(), logoColor, group.trim());
     setName('');
+    setGroup('');
   };
 
   return (
@@ -21,7 +23,7 @@ function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="admin-form mb-4" style={{ background: '#f8fafc' }}>
           <h4>Add New Team</h4>
-          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px' }}>
+          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '12px' }}>
             <div>
               <label>Team Name</label>
               <input 
@@ -40,6 +42,15 @@ function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
                 style={{ padding: '2px', height: '40px', cursor: 'pointer' }}
               />
             </div>
+            <div>
+              <label>Group (Optional)</label>
+              <input 
+                type="text" 
+                value={group} 
+                onChange={(e) => setGroup(e.target.value)} 
+                placeholder="e.g. A"
+              />
+            </div>
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button type="submit" className="success-btn" style={{ width: '100%', height: '40px' }}>
                 <Plus size={16} /> Add
@@ -55,6 +66,7 @@ function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
               <tr>
                 <th style={{ width: '80px' }}>Color</th>
                 <th className="text-left">Team Name</th>
+                <th className="text-left" style={{ width: '150px' }}>Group</th>
                 <th style={{ width: '100px' }}>Actions</th>
               </tr>
             </thead>
@@ -79,6 +91,17 @@ function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
                       onBlur={(e) => e.target.style.borderBottom = '1px dashed transparent'}
                     />
                   </td>
+                  <td className="text-left">
+                    <input 
+                      type="text" 
+                      value={t.group || ''} 
+                      onChange={(e) => onUpdateTeam && onUpdateTeam(t.id, { group: e.target.value })}
+                      placeholder="No Group"
+                      style={{ background: 'transparent', border: 'none', borderBottom: '1px dashed transparent', fontWeight: '600', width: '100%', padding: '4px', color: '#475569' }}
+                      onFocus={(e) => e.target.style.borderBottom = '1px dashed var(--accent-color)'}
+                      onBlur={(e) => e.target.style.borderBottom = '1px dashed transparent'}
+                    />
+                  </td>
                   <td>
                     <button 
                       onClick={() => onDeleteTeam(t.id)} 
@@ -92,7 +115,7 @@ function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
               ))}
               {teams.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="text-center py-6 text-muted">No teams registered.</td>
+                  <td colSpan={4} className="text-center py-6 text-muted">No teams registered.</td>
                 </tr>
               )}
             </tbody>

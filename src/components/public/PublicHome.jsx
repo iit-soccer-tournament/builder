@@ -1,6 +1,6 @@
 import { MapPin } from 'lucide-react';
 
-function PublicHome({ edition, getTeamName, fieldInfo }) {
+function PublicHome({ edition, getTeamName, getTeamColor, fieldInfo }) {
   const parseDateSafe = (dateStr) => {
     if (!dateStr) return new Date(0);
     const cleanDate = dateStr.split(',')[0].trim();
@@ -34,8 +34,140 @@ function PublicHome({ edition, getTeamName, fieldInfo }) {
   const mapUrl = fieldInfo?.mapUrl || "https://www.google.com/maps/embed/v1/place?key=AIzaSyBs_lAfpuIjfx7DGisR7oUh1ZZ_C5qtGKc&q=Via+Negrotto+Serra+Ricc%C3%B2%2C+Genoa%2C+Italy&maptype=roadmap";
   const pitchName = fieldInfo?.pitchName || "Pitches B & C";
 
+  const getKnockoutMatchesByStage = () => {
+    const roundsList = edition.rounds || [];
+    const matchesList = edition.matches || [];
+    
+    const stages = {
+      round_of_16: [],
+      quarters: [],
+      semis: [],
+      third_place: [],
+      final: []
+    };
+    
+    matchesList.forEach(m => {
+      const rObj = roundsList.find(r => (typeof r === 'object' ? r.name : r) === m.round) || { name: m.round, type: 'group' };
+      if (rObj.type === 'knockout' && rObj.knockoutType) {
+        if (stages[rObj.knockoutType]) {
+          stages[rObj.knockoutType].push(m);
+        }
+      }
+    });
+    return stages;
+  };
+
+  const knockoutStages = getKnockoutMatchesByStage();
+  const hasKnockoutMatches = Object.values(knockoutStages).some(arr => arr.length > 0);
+
+  const renderBracketMatchCard = (m, isFinal = false, isThirdPlace = false) => {
+    const isPlayed = m.status === 'played';
+    const s1 = isPlayed ? parseInt(m.score1, 10) : null;
+    const s2 = isPlayed ? parseInt(m.score2, 10) : null;
+    const t1Winner = isPlayed && s1 > s2;
+    const t2Winner = isPlayed && s2 > s1;
+
+    return (
+      <div 
+        key={m.id} 
+        style={{
+          background: 'white',
+          border: isFinal ? '2px solid var(--accent-color)' : '1px solid #cbd5e1',
+          borderRadius: '8px',
+          padding: '8px 12px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          margin: '4px 0',
+          textAlign: 'left'
+        }}
+      >
+        <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          {isFinal ? 'Championship' : isThirdPlace ? '3rd Place Match' : m.round}
+        </div>
+        
+        {/* Team 1 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: isPlayed && !t1Winner ? 0.6 : 1 }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: getTeamColor(m.team1) }}></span>
+            <span style={{ fontSize: '12px', fontWeight: t1Winner ? 'bold' : 'normal', color: '#1e293b' }}>
+              {getTeamName(m.team1, m.team1Text)}
+            </span>
+          </div>
+          {isPlayed && (
+            <span style={{ fontSize: '12px', fontWeight: t1Winner ? 'bold' : 'normal', opacity: !t1Winner ? 0.6 : 1, color: '#1e293b' }}>
+              {m.score1}
+            </span>
+          )}
+        </div>
+
+        {/* Team 2 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: isPlayed && !t2Winner ? 0.6 : 1 }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: getTeamColor(m.team2) }}></span>
+            <span style={{ fontSize: '12px', fontWeight: t2Winner ? 'bold' : 'normal', color: '#1e293b' }}>
+              {getTeamName(m.team2, m.team2Text)}
+            </span>
+          </div>
+          {isPlayed && (
+            <span style={{ fontSize: '12px', fontWeight: t2Winner ? 'bold' : 'normal', opacity: !t2Winner ? 0.6 : 1, color: '#1e293b' }}>
+              {m.score2}
+            </span>
+          )}
+        </div>
+
+        {!isPlayed && (
+          <div style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center', borderTop: '1px dashed #e2e8f0', paddingTop: '4px', marginTop: '2px' }}>
+            Scheduled • {m.time} {m.pitch ? `(Pitch ${m.pitch})` : ''}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="home-pane">
+      {hasKnockoutMatches && (
+        <div className="card bracket-card mb-6" style={{ marginBottom: '24px' }}>
+          <div className="card-header">
+            <h3>Tournament Knockout Bracket</h3>
+          </div>
+          <div className="card-body p-4 overflow-x-auto" style={{ background: '#f8fafc' }}>
+            <div className="bracket-container" style={{ display: 'flex', gap: '24px', minWidth: '800px', padding: '10px 0' }}>
+              {/* Column 1: Round of 16 */}
+              {knockoutStages.round_of_16.length > 0 && (
+                <div className="bracket-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', gap: '12px' }}>
+                  <h4 className="text-center font-bold text-sm mb-2" style={{ color: '#15803d', borderBottom: '1.5px solid rgba(21,128,61,0.15)', paddingBottom: '4px', margin: 0 }}>Round of 16</h4>
+                  {knockoutStages.round_of_16.map(m => renderBracketMatchCard(m))}
+                </div>
+              )}
+              {/* Column 2: Quarterfinals */}
+              {knockoutStages.quarters.length > 0 && (
+                <div className="bracket-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', gap: '12px' }}>
+                  <h4 className="text-center font-bold text-sm mb-2" style={{ color: '#15803d', borderBottom: '1.5px solid rgba(21,128,61,0.15)', paddingBottom: '4px', margin: 0 }}>Quarterfinals</h4>
+                  {knockoutStages.quarters.map(m => renderBracketMatchCard(m))}
+                </div>
+              )}
+              {/* Column 3: Semifinals */}
+              {knockoutStages.semis.length > 0 && (
+                <div className="bracket-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', gap: '12px' }}>
+                  <h4 className="text-center font-bold text-sm mb-2" style={{ color: '#15803d', borderBottom: '1.5px solid rgba(21,128,61,0.15)', paddingBottom: '4px', margin: 0 }}>Semifinals</h4>
+                  {knockoutStages.semis.map(m => renderBracketMatchCard(m))}
+                </div>
+              )}
+              {/* Column 4: Finals */}
+              {(knockoutStages.final.length > 0 || knockoutStages.third_place.length > 0) && (
+                <div className="bracket-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', gap: '20px' }}>
+                  <h4 className="text-center font-bold text-sm mb-2" style={{ color: '#15803d', borderBottom: '1.5px solid rgba(21,128,61,0.15)', paddingBottom: '4px', margin: 0 }}>Finals</h4>
+                  {knockoutStages.final.map(m => renderBracketMatchCard(m, true))}
+                  {knockoutStages.third_place.map(m => renderBracketMatchCard(m, false, true))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="home-grid">
         {/* Matches Overviews */}
         <div className="home-column">

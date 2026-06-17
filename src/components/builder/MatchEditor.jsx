@@ -19,6 +19,13 @@ function MatchEditor({
         'Championship Final'
     ]
 }) {
+    const getRoundName = (r) => {
+        if (!r) return 'Regular Season';
+        return typeof r === 'object' ? r.name : r;
+    };
+
+    const firstRoundName = rounds[0] ? getRoundName(rounds[0]) : 'Regular Season';
+
     const [editingId, setEditingId] = useState(null);
     const [editType, setEditType] = useState(null); // 'info' or 'results'
 
@@ -26,7 +33,7 @@ function MatchEditor({
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
     const [editPitch, setEditPitch] = useState(pitches[0] || 'C');
-    const [editRound, setEditRound] = useState(rounds[0] || 'Regular Season');
+    const [editRound, setEditRound] = useState(firstRoundName);
     const [editTeam1, setEditTeam1] = useState('');
     const [editTeam2, setEditTeam2] = useState('');
     const [editTeam1Text, setEditTeam1Text] = useState('');
@@ -49,14 +56,15 @@ function MatchEditor({
         team2: '',
         team1Text: '',
         team2Text: '',
-        round: rounds[0] || 'Regular Season'
+        round: firstRoundName
     });
 
     useEffect(() => {
+        const roundNames = rounds.map(r => typeof r === 'object' && r !== null ? r.name : r);
         setNewMatch(prev => ({
             ...prev,
             pitch: pitches.includes(prev.pitch) ? prev.pitch : (pitches[0] || 'C'),
-            round: rounds.includes(prev.round) ? prev.round : (rounds[0] || 'Regular Season')
+            round: roundNames.includes(prev.round) ? prev.round : (roundNames[0] || 'Regular Season')
         }));
     }, [pitches, rounds]);
 
@@ -218,9 +226,10 @@ function MatchEditor({
                             <label>Round / Stage</label>
                             <select value={newMatch.round}
                                     onChange={(e) => setNewMatch({...newMatch, round: e.target.value})}>
-                                {rounds.map((r, idx) => (
-                                    <option key={idx} value={r}>{r}</option>
-                                ))}
+                                {rounds.map((r, idx) => {
+                                    const name = typeof r === 'object' ? r.name : r;
+                                    return <option key={idx} value={name}>{name}</option>;
+                                })}
                             </select>
                         </div>
 
@@ -330,9 +339,10 @@ function MatchEditor({
                                                                         className="text-xs font-bold block mb-1">Round</label>
                                                                     <select value={editRound}
                                                                             onChange={e => setEditRound(e.target.value)}>
-                                                                        {rounds.map((r, idx) => (
-                                                                            <option key={idx} value={r}>{r}</option>
-                                                                        ))}
+                                                                        {rounds.map((r, idx) => {
+                                                                            const name = typeof r === 'object' ? r.name : r;
+                                                                            return <option key={idx} value={name}>{name}</option>;
+                                                                        })}
                                                                     </select>
                                                                 </div>
                                                             </div>

@@ -31,6 +31,34 @@ import './App.css';
 
 const isBuilderAvailable = import.meta.env.VITE_BUILDER === 'true';
 
+const parseRoundString = (r) => {
+  if (typeof r === 'object' && r !== null) return r;
+  const name = String(r);
+  const lower = name.toLowerCase();
+  
+  let type = 'group';
+  let knockoutType = null;
+  
+  if (lower.includes('playoff') || lower.includes('playout') || lower.includes('semifinal') || lower.includes('final') || lower.includes('knockout') || lower.includes('quarter')) {
+    type = 'knockout';
+    if (lower.includes('quarter')) {
+      knockoutType = 'quarters';
+    } else if (lower.includes('semifinal') || lower.includes('semi')) {
+      knockoutType = 'semis';
+    } else if (lower.includes('3rd') || lower.includes('third') || lower.includes('3/4')) {
+      knockoutType = 'third_place';
+    } else if (lower.includes('final')) {
+      knockoutType = 'final';
+    } else if (lower.includes('16')) {
+      knockoutType = 'round_of_16';
+    } else {
+      knockoutType = 'quarters'; // default
+    }
+  }
+  
+  return { name, type, knockoutType };
+};
+
 const ensureSeasonMetadata = (season) => {
   if (!season) return season;
   const defaultPitches = ['B', 'C'];
@@ -52,14 +80,20 @@ const ensureSeasonMetadata = (season) => {
   uniquePitchesInMatches.forEach(p => pitchesSet.add(p));
   const finalPitches = Array.from(pitchesSet);
 
-  const roundsSet = new Set(season.rounds || defaultRounds);
-  uniqueRoundsInMatches.forEach(r => roundsSet.add(r));
-  const finalRounds = Array.from(roundsSet);
+  const roundsInput = season.rounds || defaultRounds;
+  const migratedRounds = roundsInput.map(parseRoundString);
+
+  // Append any unique rounds in matches that are not in migratedRounds
+  uniqueRoundsInMatches.forEach(rName => {
+    if (!migratedRounds.some(mr => mr.name === rName)) {
+      migratedRounds.push(parseRoundString(rName));
+    }
+  });
 
   return {
     ...season,
     pitches: finalPitches,
-    rounds: finalRounds
+    rounds: migratedRounds
   };
 };
 
@@ -727,8 +761,11 @@ function App() {
     }));
 
     (currentEdition.matches || []).forEach(match => {
-      const isRegularSeason = match.round === "Regular Season" || (match.round && match.round.startsWith("Round "));
-      if (isRegularSeason && match.status === "played") {
+      const roundObj = (currentEdition.rounds || []).find(r => r.name === match.round) || 
+                       (typeof match.round === 'object' ? match.round : { name: match.round });
+      const isGroupStage = roundObj.type === 'group' || 
+                           (!roundObj.type && (match.round === "Regular Season" || (match.round && match.round.startsWith("Round "))));
+      if (isGroupStage && match.status === "played") {
         const t1 = standingsList.find(t => t.id === match.team1);
         const t2 = standingsList.find(t => t.id === match.team2);
 
@@ -770,8 +807,11 @@ function App() {
       let ptsB = 0;
       const matches = currentEdition.matches || [];
       matches.forEach(match => {
-        const isRegularSeason = match.round === "Regular Season" || (match.round && match.round.startsWith("Round "));
-        if (isRegularSeason && match.status === "played" && match.score1 !== null && match.score2 !== null) {
+        const roundObj = (currentEdition.rounds || []).find(r => r.name === match.round) || 
+                         (typeof match.round === 'object' ? match.round : { name: match.round });
+        const isGroupStage = roundObj.type === 'group' || 
+                             (!roundObj.type && (match.round === "Regular Season" || (match.round && match.round.startsWith("Round "))));
+        if (isGroupStage && match.status === "played" && match.score1 !== null && match.score2 !== null) {
           if (match.team1 === teamA.id && match.team2 === teamB.id) {
             const s1 = parseInt(match.score1, 10);
             const s2 = parseInt(match.score2, 10);

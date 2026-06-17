@@ -57,88 +57,218 @@ function PublicFixtures({
     }
   }
 
+  const getKnockoutMatchesByStage = () => {
+    const roundsList = edition.rounds || [];
+    const matchesList = edition.matches || [];
+    
+    // Group matches by knockoutType
+    const stages = {
+      round_of_16: [],
+      quarters: [],
+      semis: [],
+      third_place: [],
+      final: []
+    };
+    
+    matchesList.forEach(m => {
+      const rObj = roundsList.find(r => (typeof r === 'object' ? r.name : r) === m.round) || { name: m.round, type: 'group' };
+      if (rObj.type === 'knockout' && rObj.knockoutType) {
+        if (stages[rObj.knockoutType]) {
+          stages[rObj.knockoutType].push(m);
+        }
+      }
+    });
+    
+    return stages;
+  };
+
+  const knockoutStages = getKnockoutMatchesByStage();
+  const hasKnockoutMatches = Object.values(knockoutStages).some(arr => arr.length > 0);
+
+  const renderBracketMatchCard = (m, isFinal = false, isThirdPlace = false) => {
+    const isPlayed = m.status === 'played';
+    const s1 = isPlayed ? parseInt(m.score1, 10) : null;
+    const s2 = isPlayed ? parseInt(m.score2, 10) : null;
+    const t1Winner = isPlayed && s1 > s2;
+    const t2Winner = isPlayed && s2 > s1;
+
+    return (
+      <div 
+        key={m.id} 
+        style={{
+          background: 'white',
+          border: isFinal ? '2.5px solid var(--accent-color)' : '1px solid #e2e8f0',
+          borderRadius: '5px',
+          padding: '4px 6px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '3px',
+          margin: '1px 0',
+          textAlign: 'left'
+        }}
+      >
+        <div style={{ fontSize: '7.5px', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          {isFinal ? 'Championship' : isThirdPlace ? '3rd Place' : m.round}
+        </div>
+        
+        {/* Team 1 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', opacity: isPlayed && !t1Winner ? 0.65 : 1 }}>
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: getTeamColor(m.team1) }}></span>
+            <span style={{ fontSize: '10px', fontWeight: t1Winner ? 'bold' : '500', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px' }}>
+              {getTeamName(m.team1, m.team1Text)}
+            </span>
+          </div>
+          {isPlayed && (
+            <span style={{ fontSize: '10px', fontWeight: t1Winner ? 'bold' : 'normal', opacity: !t1Winner ? 0.6 : 1, color: '#1e293b' }}>
+              {m.score1}
+            </span>
+          )}
+        </div>
+
+        {/* Team 2 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', opacity: isPlayed && !t2Winner ? 0.65 : 1 }}>
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: getTeamColor(m.team2) }}></span>
+            <span style={{ fontSize: '10px', fontWeight: t2Winner ? 'bold' : '500', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px' }}>
+              {getTeamName(m.team2, m.team2Text)}
+            </span>
+          </div>
+          {isPlayed && (
+            <span style={{ fontSize: '10px', fontWeight: t2Winner ? 'bold' : 'normal', opacity: !t2Winner ? 0.6 : 1, color: '#1e293b' }}>
+              {m.score2}
+            </span>
+          )}
+        </div>
+
+        {!isPlayed && (
+          <div style={{ fontSize: '8px', color: '#94a3b8', textAlign: 'center', borderTop: '1px dashed #e2e8f0', paddingTop: '2px', marginTop: '1px' }}>
+            {m.time} {m.pitch ? `• P${m.pitch}` : ''}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Group standings by team.group if any group exists
+  const hasGroups = standings.some(team => team.group && team.group.trim());
+  const groupsMap = {};
+  if (hasGroups) {
+    standings.forEach(team => {
+      const gName = (team.group && team.group.trim()) ? `Group ${team.group.trim()}` : 'Unassigned';
+      if (!groupsMap[gName]) {
+        groupsMap[gName] = [];
+      }
+      groupsMap[gName].push(team);
+    });
+  }
+
+  const renderStandingsTable = (teamsList, showHeader = false, groupTitle = '') => {
+    return (
+      <div className="card-body p-0 table-responsive">
+        {showHeader && (
+          <div style={{ padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>{groupTitle}</h3>
+          </div>
+        )}
+        <table className="standings-table">
+          <thead>
+            <tr>
+              <th style={{ width: '50px' }} title="Position">Pos</th>
+              <th className="text-left" title="Team Name">Team</th>
+              <th title="Matches Played">P</th>
+              <th title="Matches Won">W</th>
+              <th title="Matches Drawn">D</th>
+              <th title="Matches Lost">L</th>
+              <th title="Goals For">GF</th>
+              <th title="Goals Against">GA</th>
+              <th title="Goal Difference">GD</th>
+              <th title="Total Points (Win=3, Draw=1)">Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {teamsList.map((team, index) => {
+              const advanceDirectCount = edition.advanceDirectCount !== undefined ? parseInt(edition.advanceDirectCount, 10) : 2;
+              const playoffCount = edition.playoffCount !== undefined ? parseInt(edition.playoffCount, 10) : 4;
+              const playoutCountSetting = edition.playoutCount !== undefined ? parseInt(edition.playoutCount, 10) : 2;
+              const hosCount = edition.hosCount !== undefined ? parseInt(edition.hosCount, 10) : 2;
+
+              let posClass = "";
+              if (index < advanceDirectCount) {
+                posClass = "advance-direct";
+              } else if (index < advanceDirectCount + playoffCount) {
+                posClass = "playoffs";
+              } else if (index < advanceDirectCount + playoffCount + playoutCountSetting) {
+                posClass = "playouts";
+              } else {
+                posClass = "hos-zone";
+              }
+
+              const isFiltered = selectedTeamFilter === team.id;
+
+              return (
+                <tr 
+                  key={team.id} 
+                  className={`${posClass} team-row-clickable ${isFiltered ? 'team-row-selected' : ''}`}
+                  onClick={() => setSelectedTeamFilter(selectedTeamFilter === team.id ? null : team.id)}
+                  title={`Click to filter matches for ${team.name}`}
+                >
+                  <td>
+                    <span className={`pos-badge pos-${index + 1}`}>{index + 1}</span>
+                  </td>
+                  <td className="text-left font-medium">
+                    <span className="team-color-indicator" style={{ backgroundColor: team.logoColor }}></span>
+                    {team.name}
+                  </td>
+                  <td>{team.played}</td>
+                  <td>{team.won}</td>
+                  <td>{team.drawn}</td>
+                  <td>{team.lost}</td>
+                  <td>{team.gf}</td>
+                  <td>{team.ga}</td>
+                  <td>
+                    <span className={team.gd > 0 ? 'pos-gd' : team.gd < 0 ? 'neg-gd' : ''}>
+                      {team.gd > 0 ? `+${team.gd}` : team.gd}
+                    </span>
+                  </td>
+                  <td className="font-bold points-col">{team.points}</td>
+                </tr>
+              );
+            })}
+            {teamsList.length === 0 && (
+              <tr>
+                <td colSpan={10} className="text-center py-4 text-muted">No teams found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <div className="fixtures-layout">
-      {/* Standings Table */}
-      <div className="standings-card">
-        <div className="card">
-          <div className="card-header">
-            <h2>Current Ranking</h2>
+      {/* Standings Table column */}
+      <div className="standings-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {hasGroups ? (
+          Object.keys(groupsMap).sort().map(gName => (
+            <div className="card" key={gName}>
+              {renderStandingsTable(groupsMap[gName], true, gName)}
+            </div>
+          ))
+        ) : (
+          <div className="card">
+            <div className="card-header">
+              <h2>Current Ranking</h2>
+            </div>
+            {renderStandingsTable(standings, false)}
           </div>
-          <div className="card-body p-0 table-responsive">
-            <table className="standings-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '60px' }} title="Position">Pos</th>
-                  <th className="text-left" title="Team Name">Team</th>
-                  <th title="Matches Played">P</th>
-                  <th title="Matches Won">W</th>
-                  <th title="Matches Drawn">D</th>
-                  <th title="Matches Lost">L</th>
-                  <th title="Goals For">GF</th>
-                  <th title="Goals Against">GA</th>
-                  <th title="Goal Difference">GD</th>
-                  <th title="Total Points (Win=3, Draw=1)">Pts</th>
-                </tr>
-              </thead>
-              <tbody>
-                {standings.map((team, index) => {
-                  const advanceDirectCount = edition.advanceDirectCount !== undefined ? parseInt(edition.advanceDirectCount, 10) : 2;
-                  const playoffCount = edition.playoffCount !== undefined ? parseInt(edition.playoffCount, 10) : 4;
-                  const playoutCountSetting = edition.playoutCount !== undefined ? parseInt(edition.playoutCount, 10) : 2;
-                  const hosCount = edition.hosCount !== undefined ? parseInt(edition.hosCount, 10) : 2;
+        )}
 
-                  let posClass = "";
-                  if (index < advanceDirectCount) {
-                    posClass = "advance-direct";
-                  } else if (index < advanceDirectCount + playoffCount) {
-                    posClass = "playoffs";
-                  } else if (index < advanceDirectCount + playoffCount + playoutCountSetting) {
-                    posClass = "playouts";
-                  } else {
-                    posClass = "hos-zone";
-                  }
-
-                  const isFiltered = selectedTeamFilter === team.id;
-
-                  return (
-                    <tr 
-                      key={team.id} 
-                      className={`${posClass} team-row-clickable ${isFiltered ? 'team-row-selected' : ''}`}
-                      onClick={() => setSelectedTeamFilter(selectedTeamFilter === team.id ? null : team.id)}
-                      title={`Click to filter matches for ${team.name}`}
-                    >
-                      <td>
-                        <span className={`pos-badge pos-${index + 1}`}>{index + 1}</span>
-                      </td>
-                      <td className="text-left font-medium">
-                        <span className="team-color-indicator" style={{ backgroundColor: team.logoColor }}></span>
-                        {team.name}
-                      </td>
-                      <td>{team.played}</td>
-                      <td>{team.won}</td>
-                      <td>{team.drawn}</td>
-                      <td>{team.lost}</td>
-                      <td>{team.gf}</td>
-                      <td>{team.ga}</td>
-                      <td>
-                        <span className={team.gd > 0 ? 'pos-gd' : team.gd < 0 ? 'neg-gd' : ''}>
-                          {team.gd > 0 ? `+${team.gd}` : team.gd}
-                        </span>
-                      </td>
-                      <td className="font-bold points-col">{team.points}</td>
-                    </tr>
-                  );
-                })}
-                {standings.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="text-center py-4 text-muted">No teams found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="card-footer legend-footer">
+        {/* Standings Legend - render at the bottom of the column */}
+        <div className="card legend-card" style={{ padding: '16px' }}>
+          <div className="legend-footer" style={{ borderTop: 'none', paddingTop: 0, paddingBottom: 0, display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
             {(() => {
               const adc = edition.advanceDirectCount !== undefined ? parseInt(edition.advanceDirectCount, 10) : 2;
               const pc = edition.playoffCount !== undefined ? parseInt(edition.playoffCount, 10) : 4;
@@ -177,8 +307,49 @@ function PublicFixtures({
         </div>
       </div>
 
-      {/* Matches schedule */}
+      {/* Matches schedule and bracket */}
       <div className="matches-list-area">
+        {hasKnockoutMatches && (
+          <div className="card bracket-card mb-4" style={{ marginBottom: '16px' }}>
+            <div className="card-header" style={{ padding: '10px 16px' }}>
+              <h2 style={{ fontSize: '14px', margin: 0 }}>Knockout Bracket</h2>
+            </div>
+            <div className="card-body p-2 overflow-x-auto" style={{ background: '#f8fafc' }}>
+              <div className="bracket-container" style={{ display: 'flex', gap: '8px', minWidth: '450px', padding: '4px 0' }}>
+                {/* Column 1: Round of 16 */}
+                {knockoutStages.round_of_16.length > 0 && (
+                  <div className="bracket-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', gap: '6px', minWidth: '100px' }}>
+                    <h4 className="text-center font-bold text-[9px] mb-1" style={{ color: '#15803d', borderBottom: '1px solid rgba(21,128,61,0.15)', paddingBottom: '2px', margin: 0 }}>Round of 16</h4>
+                    {knockoutStages.round_of_16.map(m => renderBracketMatchCard(m))}
+                  </div>
+                )}
+                {/* Column 2: Quarterfinals */}
+                {knockoutStages.quarters.length > 0 && (
+                  <div className="bracket-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', gap: '6px', minWidth: '100px' }}>
+                    <h4 className="text-center font-bold text-[9px] mb-1" style={{ color: '#15803d', borderBottom: '1px solid rgba(21,128,61,0.15)', paddingBottom: '2px', margin: 0 }}>Quarterfinals</h4>
+                    {knockoutStages.quarters.map(m => renderBracketMatchCard(m))}
+                  </div>
+                )}
+                {/* Column 3: Semifinals */}
+                {knockoutStages.semis.length > 0 && (
+                  <div className="bracket-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', gap: '6px', minWidth: '100px' }}>
+                    <h4 className="text-center font-bold text-[9px] mb-1" style={{ color: '#15803d', borderBottom: '1px solid rgba(21,128,61,0.15)', paddingBottom: '2px', margin: 0 }}>Semifinals</h4>
+                    {knockoutStages.semis.map(m => renderBracketMatchCard(m))}
+                  </div>
+                )}
+                {/* Column 4: Finals */}
+                {(knockoutStages.final.length > 0 || knockoutStages.third_place.length > 0) && (
+                  <div className="bracket-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', gap: '8px', minWidth: '100px' }}>
+                    <h4 className="text-center font-bold text-[9px] mb-1" style={{ color: '#15803d', borderBottom: '1px solid rgba(21,128,61,0.15)', paddingBottom: '2px', margin: 0 }}>Finals</h4>
+                    {knockoutStages.final.map(m => renderBracketMatchCard(m, true))}
+                    {knockoutStages.third_place.map(m => renderBracketMatchCard(m, false, true))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="card">
           <div className="card-header flex-between">
             <div>
