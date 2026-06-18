@@ -68,7 +68,8 @@ function BuilderMain({
   onResetDefault,
   onPreviewToggle,
   saveStatus,
-  onUploadImage
+  onUploadImage,
+  standings = []
 }) {
   const [activeBuilderTab, setActiveBuilderTab] = useState(() => {
     const hash = window.location.hash;
@@ -553,6 +554,90 @@ function BuilderMain({
                         ))}
                         {(currentEdition.pitches || []).length === 0 && (
                           <span className="text-muted text-xs">No pitches configured for this season.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Groups list */}
+                    <div style={{ marginBottom: '20px', borderTop: '1px solid rgba(21, 128, 61, 0.1)', paddingTop: '16px' }}>
+                      <h4 style={{ marginBottom: '8px' }}>Groups List</h4>
+                      <div className="flex-gap mb-2">
+                        <input
+                          type="text"
+                          id="new-group-input"
+                          placeholder="Add new group (e.g. A, B)"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = e.target.value.trim();
+                              if (val) {
+                                const currentGroups = currentEdition.groups || [];
+                                if (!currentGroups.includes(val)) {
+                                  updateCurrentEdition({ groups: [...currentGroups, val] });
+                                }
+                                e.target.value = '';
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="success-btn"
+                          style={{ margin: 0 }}
+                          onClick={() => {
+                            const input = document.getElementById('new-group-input');
+                            const val = input.value.trim();
+                            if (val) {
+                              const currentGroups = currentEdition.groups || [];
+                              if (!currentGroups.includes(val)) {
+                                updateCurrentEdition({ groups: [...currentGroups, val] });
+                              }
+                              input.value = '';
+                            }
+                          }}
+                        >
+                          Add Group
+                        </button>
+                      </div>
+                      <div className="flex-gap" style={{ flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                        {(currentEdition.groups || []).map((grp, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              background: '#e2e8f0',
+                              padding: '4px 10px',
+                              borderRadius: '20px',
+                              fontSize: '13px',
+                              fontWeight: '600',
+                              color: '#334155',
+                              border: '1px solid #cbd5e1'
+                            }}
+                          >
+                            Group {grp}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = (currentEdition.groups || []).filter(g => g !== grp);
+                                updateCurrentEdition({ groups: updated });
+                              }}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#ef4444',
+                                cursor: 'pointer',
+                                marginLeft: '6px',
+                                fontWeight: 'bold',
+                                padding: '0 2px'
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                        {(currentEdition.groups || []).length === 0 && (
+                          <span className="text-muted text-xs">No groups configured for this season. Default single standings will be used.</span>
                         )}
                       </div>
                     </div>
@@ -1045,6 +1130,7 @@ function BuilderMain({
         {activeBuilderTab === 'teams' && (
           <TeamEditor 
             teams={currentEdition.teams}
+            groups={currentEdition.groups || []}
             onAddTeam={(name, color, group) => {
               const id = 't_' + Date.now();
               const updated = [...currentEdition.teams, { id, name, logoColor: color, group: group || '' }];
@@ -1069,6 +1155,8 @@ function BuilderMain({
             scorers={currentEdition.scorers || []}
             pitches={currentEdition.pitches}
             rounds={currentEdition.rounds}
+            groups={currentEdition.groups || []}
+            standings={standings}
             onAddMatch={(m) => {
               const id = 'm_' + Date.now();
               const updated = [...currentEdition.matches, { ...m, id, score1: null, score2: null, status: 'scheduled' }];

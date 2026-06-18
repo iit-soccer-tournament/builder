@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 
-function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
+function TeamEditor({ teams = [], groups = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
   const [name, setName] = useState('');
   const [logoColor, setLogoColor] = useState('#3b82f6');
   const [group, setGroup] = useState('');
@@ -49,7 +49,11 @@ function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
                 value={group} 
                 onChange={(e) => setGroup(e.target.value)} 
                 placeholder="e.g. A"
+                list="builder-groups-datalist"
               />
+              <datalist id="builder-groups-datalist">
+                {groups.map(g => <option key={g} value={g} />)}
+              </datalist>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button type="submit" className="success-btn" style={{ width: '100%', height: '40px' }}>
@@ -97,6 +101,7 @@ function TeamEditor({ teams = [], onAddTeam, onDeleteTeam, onUpdateTeam }) {
                       value={t.group || ''} 
                       onChange={(e) => onUpdateTeam && onUpdateTeam(t.id, { group: e.target.value })}
                       placeholder="No Group"
+                      list="builder-groups-datalist"
                       style={{ background: 'transparent', border: 'none', borderBottom: '1px dashed transparent', fontWeight: '600', width: '100%', padding: '4px', color: '#475569' }}
                       onFocus={(e) => e.target.style.borderBottom = '1px dashed var(--accent-color)'}
                       onBlur={(e) => e.target.style.borderBottom = '1px dashed transparent'}

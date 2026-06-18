@@ -1516,6 +1516,7 @@ function App() {
           onUploadImage={handleUploadImage}
           onSave={handleSaveChanges}
           onRollback={handleRollbackChanges}
+          standings={standings}
         />
       ) : (
         /* ==================== PREVIEW SITE VIEW ==================== */
@@ -1587,6 +1588,7 @@ function App() {
                   getTeamName={getTeamName} 
                   getTeamColor={getTeamColor} 
                   fieldInfo={globalFieldInfo}
+                  standings={standings}
                 />
               )
             )}

@@ -17,7 +17,9 @@ function MatchEditor({
         '3rd Place Final',
         'Hall of Shame Final',
         'Championship Final'
-    ]
+    ],
+    groups = [],
+    standings = []
 }) {
     const getRoundName = (r) => {
         if (!r) return 'Regular Season';
@@ -38,6 +40,8 @@ function MatchEditor({
     const [editTeam2, setEditTeam2] = useState('');
     const [editTeam1Text, setEditTeam1Text] = useState('');
     const [editTeam2Text, setEditTeam2Text] = useState('');
+    const [editTeam1Dep, setEditTeam1Dep] = useState(null);
+    const [editTeam2Dep, setEditTeam2Dep] = useState(null);
     const [editStatus, setEditStatus] = useState('scheduled');
     const [editScorers1, setEditScorers1] = useState([]);
     const [editScorers2, setEditScorers2] = useState([]);
@@ -48,6 +52,228 @@ function MatchEditor({
     const [scorerGender1, setScorerGender1] = useState('Men');
     const [scorerGender2, setScorerGender2] = useState('Men');
 
+    const getMatchIdentifier = (m) => {
+        if (!m || !m.round) return '';
+        const matchesInRound = (matches || [])
+            .filter(x => x.round === m.round)
+            .sort((a, b) => a.id.localeCompare(b.id));
+        if (matchesInRound.length <= 1) {
+            return m.round;
+        }
+        const idx = matchesInRound.findIndex(x => x.id === m.id);
+        return `${m.round} #${idx + 1}`;
+    };
+
+    const parseQuickOriginValue = (val) => {
+        if (!val) return { text: '', dep: null };
+        if (val.startsWith('winner:') || val.startsWith('loser:')) {
+            const type = val.startsWith('winner:') ? 'match_winner' : 'match_loser';
+            const matchId = val.split(':')[1];
+            const parentMatch = matches.find(m => m.id === matchId);
+            const name = parentMatch ? getMatchIdentifier(parentMatch) : 'Match';
+            const label = val.startsWith('winner:') ? `Winner of ${name}` : `Loser of ${name}`;
+            return { text: label, dep: { type, matchId } };
+        }
+        if (val.startsWith('regular_season_rank:')) {
+            const rank = parseInt(val.split(':')[1], 10);
+            const suffix = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
+            return { text: `${rank}${suffix} in Regular Season`, dep: { type: 'regular_season_rank', rank } };
+        }
+        if (val.startsWith('group_rank:')) {
+            const parts = val.split(':');
+            const groupId = parts[1];
+            const rank = parseInt(parts[2], 10);
+            const suffix = rank === 1 ? 'st' : rank === 2 ? 'nd' : rank === 3 ? 'rd' : 'th';
+            return { text: `${rank}${suffix} in Group ${groupId}`, dep: { type: 'group_rank', groupId, rank } };
+        }
+        return { text: val, dep: null };
+    };
+    const resolveTeamPlaceholder = (text, dep) => {
+        // Helper to check if all group stage matches (regular season/group rounds) are played
+        const isGroupCompleted = (groupId = null) => {
+            const groupMatches = (matches || []).filter(m => {
+                const rObj = (rounds || []).find(r => (typeof r === 'object' ? r.name : r) === m.round);
+                const isGroup = rObj ? rObj.type === 'group' : (m.round === 'Regular Season' || m.round.startsWith('Round '));
+                if (!isGroup) return false;
+                if (groupId) {
+                    const groupLetter = groupId.trim().toLowerCase();
+                    const t1Obj = teams.find(t => t.id === m.team1);
+                    const t2Obj = teams.find(t => t.id === m.team2);
+                    const t1Group = t1Obj && t1Obj.group ? t1Obj.group.trim().toLowerCase() : '';
+                    const t2Group = t2Obj && t2Obj.group ? t2Obj.group.trim().toLowerCase() : '';
+                    return t1Group === groupLetter || t2Group === groupLetter;
+                }
+                return true;
+            });
+            return groupMatches.length > 0 && groupMatches.every(m => m.status === 'played');
+        };
+
+        // 1. Resolve structured dependency if present
+        if (dep && typeof dep === 'object') {
+            if (dep.type === 'regular_season_rank') {
+                const rank = dep.rank;
+                if (isGroupCompleted() && standings && standings[rank - 1]) {
+                    return standings[rank - 1];
+                }
+            }
+            if (dep.type === 'group_rank') {
+                const rank = dep.rank;
+                const groupLetter = (dep.groupId || '').trim().toLowerCase();
+                if (isGroupCompleted(groupLetter)) {
+                    const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
+                    if (groupTeams[rank - 1]) {
+                        return groupTeams[rank - 1];
+                    }
+                }
+            }
+            if (dep.type === 'match_winner' || dep.type === 'match_loser') {
+                const isWinnerSearch = dep.type === 'match_winner';
+                const foundMatch = (matches || []).find(m => m.id === dep.matchId);
+                if (foundMatch && foundMatch.status === 'played') {
+                    const s1 = parseInt(foundMatch.score1, 10);
+                    const s2 = parseInt(foundMatch.score2, 10);
+                    const t1 = foundMatch.team1;
+                    const t2 = foundMatch.team2;
+                    const t1Text = foundMatch.team1Text;
+                    const t2Text = foundMatch.team2Text;
+                    const t1Dep = foundMatch.team1Dep;
+                    const t2Dep = foundMatch.team2Dep;
+
+                    let winnerId = null;
+                    let winnerText = null;
+                    let winnerDep = null;
+                    let loserId = null;
+                    let loserText = null;
+                    let loserDep = null;
+
+                    if (s1 > s2) {
+                        winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
+                        loserId = t2; loserText = t2Text; loserDep = t2Dep;
+                    } else {
+                        winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+                        loserId = t1; loserText = t1Text; loserDep = t1Dep;
+                    }
+
+                    const resolvedId = isWinnerSearch ? winnerId : loserId;
+                    const resolvedText = isWinnerSearch ? winnerText : loserText;
+                    const resolvedDep = isWinnerSearch ? winnerDep : loserDep;
+
+                    if (resolvedId) {
+                        const tObj = teams.find(t => t.id === resolvedId);
+                        if (tObj) return tObj;
+                    }
+                    if (resolvedText || resolvedDep) {
+                        return resolveTeamPlaceholder(resolvedText, resolvedDep) || { name: resolvedText, id: null, logoColor: '#718096' };
+                    }
+                }
+            }
+        }
+
+        // 2. Fallback to existing text parsing
+        if (!text) return null;
+        const cleanText = text.trim();
+        const lower = cleanText.toLowerCase();
+
+        const standingsRankRegex = /^(\d+)(?:st|nd|rd|th)\s+in\s+group\s+(.+)$/i;
+        const regularRankRegex = /^(\d+)(?:st|nd|rd|th)\s+in\s+regular\s+season$/i;
+
+        const matchGroup = cleanText.match(standingsRankRegex);
+        if (matchGroup) {
+            const rank = parseInt(matchGroup[1], 10);
+            const groupLetter = matchGroup[2].trim().toLowerCase();
+            if (isGroupCompleted(groupLetter)) {
+                const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
+                if (groupTeams[rank - 1]) {
+                    return groupTeams[rank - 1];
+                }
+            }
+        }
+
+        const matchRegular = cleanText.match(regularRankRegex);
+        if (matchRegular) {
+            const rank = parseInt(matchRegular[1], 10);
+            if (isGroupCompleted() && standings[rank - 1]) {
+                return standings[rank - 1];
+            }
+        }
+
+        if (lower.startsWith('winner of ') || lower.startsWith('loser of ')) {
+            const isWinnerSearch = lower.startsWith('winner of ');
+            const targetMatchId = lower.replace('winner of ', '').replace('loser of ', '').trim();
+            
+            const foundMatch = (matches || []).find(m => getMatchIdentifier(m) === targetMatchId);
+            if (foundMatch && foundMatch.status === 'played') {
+                const s1 = parseInt(foundMatch.score1, 10);
+                const s2 = parseInt(foundMatch.score2, 10);
+                const t1 = foundMatch.team1;
+                const t2 = foundMatch.team2;
+                const t1Text = foundMatch.team1Text;
+                const t2Text = foundMatch.team2Text;
+                const t1Dep = foundMatch.team1Dep;
+                const t2Dep = foundMatch.team2Dep;
+
+                let winnerId = null;
+                let winnerText = null;
+                let winnerDep = null;
+                let loserId = null;
+                let loserText = null;
+                let loserDep = null;
+
+                if (s1 > s2) {
+                    winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
+                    loserId = t2; loserText = t2Text; loserDep = t2Dep;
+                } else {
+                    winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+                    loserId = t1; loserText = t1Text; loserDep = t1Dep;
+                }
+
+                const resolvedId = isWinnerSearch ? winnerId : loserId;
+                const resolvedText = isWinnerSearch ? winnerText : loserText;
+                const resolvedDep = isWinnerSearch ? winnerDep : loserDep;
+
+                if (resolvedId) {
+                    const tObj = teams.find(t => t.id === resolvedId);
+                    if (tObj) return tObj;
+                }
+                if (resolvedText || resolvedDep) {
+                    return resolveTeamPlaceholder(resolvedText, resolvedDep) || { name: resolvedText, id: null, logoColor: '#718096' };
+                }
+            }
+        }
+
+        return null;
+    };
+
+    const getResolvedTeamInfo = (teamId, text, dep) => {
+        if (teamId) {
+            const teamObj = teams.find(t => t.id === teamId);
+            if (teamObj) return { name: teamObj.name, color: teamObj.logoColor, id: teamObj.id };
+        }
+        if (text || dep) {
+            const resolved = resolveTeamPlaceholder(text, dep);
+            if (resolved) {
+                return { name: resolved.name, color: resolved.logoColor, id: resolved.id };
+            }
+            return { name: text || 'TBD', color: '#718096', id: null };
+        }
+        return { name: 'TBD', color: '#718096', id: null };
+    };
+
+    const getMatchDisplayTeamName = (teamId, text, dep) => {
+        const resolved = getResolvedTeamInfo(teamId, text, dep);
+        if (teamId) {
+            return resolved.name;
+        }
+        if (text) {
+            if (resolved.name !== text) {
+                return `${resolved.name} (${text})`;
+            }
+            return text;
+        }
+        return 'TBD';
+    };
+
+
     const [newMatch, setNewMatch] = useState({
         date: '',
         time: '19:00',
@@ -56,6 +282,8 @@ function MatchEditor({
         team2: '',
         team1Text: '',
         team2Text: '',
+        team1Dep: null,
+        team2Dep: null,
         round: firstRoundName
     });
 
@@ -113,6 +341,8 @@ function MatchEditor({
             team2: '',
             team1Text: '',
             team2Text: '',
+            team1Dep: null,
+            team2Dep: null,
             round: rounds[0] || 'Regular Season'
         });
     };
@@ -128,6 +358,8 @@ function MatchEditor({
         setEditTeam2(m.team2 || '');
         setEditTeam1Text(m.team1Text || '');
         setEditTeam2Text(m.team2Text || '');
+        setEditTeam1Dep(m.team1Dep || null);
+        setEditTeam2Dep(m.team2Dep || null);
         setEditStatus(m.status || 'scheduled');
         setEditScorers1(m.scorers1 || []);
         setEditScorers2(m.scorers2 || []);
@@ -167,7 +399,9 @@ function MatchEditor({
                 team1: editTeam1,
                 team2: editTeam2,
                 team1Text: editTeam1Text,
-                team2Text: editTeam2Text
+                team2Text: editTeam2Text,
+                team1Dep: editTeam1Dep,
+                team2Dep: editTeam2Dep
             });
         } else {
             const finalStatus = (editScorers1.length > 0 || editScorers2.length > 0) ? 'played' : editStatus;
@@ -234,38 +468,230 @@ function MatchEditor({
                         </div>
 
                         <div className="col-span-2">
-                            <label>Team 1 (Select standard or type placeholder)</label>
-                            <div className="flex-gap">
+                            <label>Team 1 (Select standard or choose origin placeholder)</label>
+                            <div className="flex-gap" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 <select
                                     value={newMatch.team1}
-                                    onChange={(e) => setNewMatch({...newMatch, team1: e.target.value, team1Text: ''})}
+                                    onChange={(e) => setNewMatch({...newMatch, team1: e.target.value, team1Text: '', team1Dep: null})}
+                                    disabled={!!newMatch.team1Dep}
+                                    style={{ flex: 1, minWidth: '140px' }}
                                 >
                                     <option value="">-- Choose Team --</option>
                                     {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                 </select>
-                                <input
-                                    type="text"
-                                    value={newMatch.team1Text}
-                                    onChange={(e) => setNewMatch({...newMatch, team1Text: e.target.value, team1: ''})}
-                                />
+                                {newMatch.team1Dep ? (
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '4px 12px',
+                                        background: '#dcfce7',
+                                        border: '1px solid #86efac',
+                                        borderRadius: '6px',
+                                        color: '#166534',
+                                        fontSize: '14px',
+                                        fontWeight: '500',
+                                        flex: 1,
+                                        minWidth: '180px'
+                                    }}>
+                                        <span>{newMatch.team1Text}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setNewMatch({...newMatch, team1Dep: null, team1Text: ''})}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#15803d',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                marginLeft: 'auto',
+                                                padding: '0 4px'
+                                            }}
+                                            title="Clear origin dependency"
+                                        >
+                                            ✕ Clear
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        value={newMatch.team1Text}
+                                        onChange={(e) => setNewMatch({...newMatch, team1Text: e.target.value, team1Dep: null, team1: ''})}
+                                        placeholder="Type custom origin (e.g. Winner of QF1)"
+                                        style={{ flex: 1, minWidth: '180px' }}
+                                    />
+                                )}
+                                {(() => {
+                                    const selectedNewRoundObj = rounds.find(r => (typeof r === 'object' ? r.name : r) === newMatch.round) || { type: 'group' };
+                                    if (selectedNewRoundObj.type === 'knockout') {
+                                        return (
+                                            <select
+                                                value=""
+                                                onChange={(e) => {
+                                                    if (e.target.value) {
+                                                        const { text, dep } = parseQuickOriginValue(e.target.value);
+                                                        setNewMatch({...newMatch, team1Text: text, team1Dep: dep, team1: ''});
+                                                    }
+                                                }}
+                                                style={{ flex: 1, minWidth: '160px', background: '#f0fdf4', border: '1.5px solid #22c55e' }}
+                                            >
+                                                <option value="">-- Quick Origin 1 --</option>
+                                                <optgroup label="Standings Rank">
+                                                    {teams.map((_, index) => {
+                                                        const pos = index + 1;
+                                                        return (
+                                                            <option key={pos} value={`regular_season_rank:${pos}`}>
+                                                                {pos === 1 ? '1st' : pos === 2 ? '2nd' : pos === 3 ? '3rd' : `${pos}th`} in Regular Season
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </optgroup>
+                                                {groups.length > 0 && (
+                                                    <optgroup label="Group Standings Rank">
+                                                        {groups.flatMap(g => [
+                                                            <option key={`1st-${g}`} value={`group_rank:${g}:1`}>1st in Group {g}</option>,
+                                                            <option key={`2nd-${g}`} value={`group_rank:${g}:2`}>2nd in Group {g}</option>,
+                                                            <option key={`3rd-${g}`} value={`group_rank:${g}:3`}>3rd in Group {g}</option>,
+                                                            <option key={`4th-${g}`} value={`group_rank:${g}:4`}>4th in Group {g}</option>
+                                                        ])}
+                                                    </optgroup>
+                                                )}
+                                                <optgroup label="Match Winners / Losers">
+                                                    {matches
+                                                        .filter(m => {
+                                                            const rObj = rounds.find(r => (typeof r === 'object' ? r.name : r) === m.round);
+                                                            return rObj && rObj.type === 'knockout';
+                                                        })
+                                                        .map(m => {
+                                                            const name = getMatchIdentifier(m);
+                                                            return (
+                                                                <React.Fragment key={m.id}>
+                                                                    <option value={`winner:${m.id}`}>Winner of {name}</option>
+                                                                    <option value={`loser:${m.id}`}>Loser of {name}</option>
+                                                                </React.Fragment>
+                                                            );
+                                                        })
+                                                    }
+                                                </optgroup>
+                                            </select>
+                                        );
+                                    }
+                                    return null;
+                                })()}
                             </div>
                         </div>
 
                         <div className="col-span-2">
-                            <label>Team 2 (Select standard or type placeholder)</label>
-                            <div className="flex-gap">
+                            <label>Team 2 (Select standard or choose origin placeholder)</label>
+                            <div className="flex-gap" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 <select
                                     value={newMatch.team2}
-                                    onChange={(e) => setNewMatch({...newMatch, team2: e.target.value, team2Text: ''})}
+                                    onChange={(e) => setNewMatch({...newMatch, team2: e.target.value, team2Text: '', team2Dep: null})}
+                                    disabled={!!newMatch.team2Dep}
+                                    style={{ flex: 1, minWidth: '140px' }}
                                 >
                                     <option value="">-- Choose Team --</option>
                                     {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                 </select>
-                                <input
-                                    type="text"
-                                    value={newMatch.team2Text}
-                                    onChange={(e) => setNewMatch({...newMatch, team2Text: e.target.value, team2: ''})}
-                                />
+                                {newMatch.team2Dep ? (
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '4px 12px',
+                                        background: '#dcfce7',
+                                        border: '1px solid #86efac',
+                                        borderRadius: '6px',
+                                        color: '#166534',
+                                        fontSize: '14px',
+                                        fontWeight: '500',
+                                        flex: 1,
+                                        minWidth: '180px'
+                                    }}>
+                                        <span>{newMatch.team2Text}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setNewMatch({...newMatch, team2Dep: null, team2Text: ''})}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#15803d',
+                                                cursor: 'pointer',
+                                                fontWeight: 'bold',
+                                                marginLeft: 'auto',
+                                                padding: '0 4px'
+                                            }}
+                                            title="Clear origin dependency"
+                                        >
+                                            ✕ Clear
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        value={newMatch.team2Text}
+                                        onChange={(e) => setNewMatch({...newMatch, team2Text: e.target.value, team2Dep: null, team2: ''})}
+                                        placeholder="Type custom origin (e.g. Winner of QF2)"
+                                        style={{ flex: 1, minWidth: '180px' }}
+                                    />
+                                )}
+                                {(() => {
+                                    const selectedNewRoundObj = rounds.find(r => (typeof r === 'object' ? r.name : r) === newMatch.round) || { type: 'group' };
+                                    if (selectedNewRoundObj.type === 'knockout') {
+                                        return (
+                                            <select
+                                                value=""
+                                                onChange={(e) => {
+                                                    if (e.target.value) {
+                                                        const { text, dep } = parseQuickOriginValue(e.target.value);
+                                                        setNewMatch({...newMatch, team2Text: text, team2Dep: dep, team2: ''});
+                                                    }
+                                                }}
+                                                style={{ flex: 1, minWidth: '160px', background: '#f0fdf4', border: '1.5px solid #22c55e' }}
+                                            >
+                                                <option value="">-- Quick Origin 2 --</option>
+                                                <optgroup label="Standings Rank">
+                                                    {teams.map((_, index) => {
+                                                        const pos = index + 1;
+                                                        return (
+                                                            <option key={pos} value={`regular_season_rank:${pos}`}>
+                                                                {pos === 1 ? '1st' : pos === 2 ? '2nd' : pos === 3 ? '3rd' : `${pos}th`} in Regular Season
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </optgroup>
+                                                {groups.length > 0 && (
+                                                    <optgroup label="Group Standings Rank">
+                                                        {groups.flatMap(g => [
+                                                            <option key={`1st-${g}`} value={`group_rank:${g}:1`}>1st in Group {g}</option>,
+                                                            <option key={`2nd-${g}`} value={`group_rank:${g}:2`}>2nd in Group {g}</option>,
+                                                            <option key={`3rd-${g}`} value={`group_rank:${g}:3`}>3rd in Group {g}</option>,
+                                                            <option key={`4th-${g}`} value={`group_rank:${g}:4`}>4th in Group {g}</option>
+                                                        ])}
+                                                    </optgroup>
+                                                )}
+                                                <optgroup label="Match Winners / Losers">
+                                                    {matches
+                                                        .filter(m => {
+                                                            const rObj = rounds.find(r => (typeof r === 'object' ? r.name : r) === m.round);
+                                                            return rObj && rObj.type === 'knockout';
+                                                        })
+                                                        .map(m => {
+                                                            const name = getMatchIdentifier(m);
+                                                            return (
+                                                                <React.Fragment key={m.id}>
+                                                                    <option value={`winner:${m.id}`}>Winner of {name}</option>
+                                                                    <option value={`loser:${m.id}`}>Loser of {name}</option>
+                                                                </React.Fragment>
+                                                            );
+                                                        })
+                                                    }
+                                                </optgroup>
+                                            </select>
+                                        );
+                                    }
+                                    return null;
+                                })()}
                             </div>
                         </div>
                     </div>
@@ -353,56 +779,258 @@ function MatchEditor({
                                                                 gap: '16px'
                                                             }}>
                                                                 <div>
-                                                                    <label className="text-xs font-bold block mb-1">Team
-                                                                        1</label>
-                                                                    <div className="flex-gap">
+                                                                    <label className="text-xs font-bold block mb-1">Team 1</label>
+                                                                    <div className="flex-gap" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                                                         <select
                                                                             value={editTeam1}
                                                                             onChange={e => {
                                                                                 setEditTeam1(e.target.value);
                                                                                 setEditTeam1Text('');
+                                                                                setEditTeam1Dep(null);
                                                                             }}
+                                                                            disabled={!!editTeam1Dep}
+                                                                            style={{ flex: 1, minWidth: '120px' }}
                                                                         >
                                                                             <option value="">-- Choose Team --</option>
                                                                             {teams.map(t => <option key={t.id}
                                                                                                     value={t.id}>{t.name}</option>)}
                                                                         </select>
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder="Or placeholder name"
-                                                                            value={editTeam1Text}
-                                                                            onChange={e => {
-                                                                                setEditTeam1Text(e.target.value);
-                                                                                setEditTeam1('');
-                                                                            }}
-                                                                        />
+                                                                        {editTeam1Dep ? (
+                                                                            <div style={{
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '6px',
+                                                                                padding: '4px 12px',
+                                                                                background: '#dcfce7',
+                                                                                border: '1px solid #86efac',
+                                                                                borderRadius: '6px',
+                                                                                color: '#166534',
+                                                                                fontSize: '14px',
+                                                                                fontWeight: '500',
+                                                                                flex: 1,
+                                                                                minWidth: '150px'
+                                                                            }}>
+                                                                                <span>{editTeam1Text}</span>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setEditTeam1Dep(null);
+                                                                                        setEditTeam1Text('');
+                                                                                    }}
+                                                                                    style={{
+                                                                                        background: 'none',
+                                                                                        border: 'none',
+                                                                                        color: '#15803d',
+                                                                                        cursor: 'pointer',
+                                                                                        fontWeight: 'bold',
+                                                                                        marginLeft: 'auto',
+                                                                                        padding: '0 4px'
+                                                                                    }}
+                                                                                    title="Clear origin dependency"
+                                                                                >
+                                                                                    ✕ Clear
+                                                                                </button>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="Or placeholder name"
+                                                                                value={editTeam1Text}
+                                                                                onChange={e => {
+                                                                                    setEditTeam1Text(e.target.value);
+                                                                                    setEditTeam1Dep(null);
+                                                                                    setEditTeam1('');
+                                                                                }}
+                                                                                style={{ flex: 1, minWidth: '150px' }}
+                                                                            />
+                                                                        )}
+                                                                        {(() => {
+                                                                            const selectedEditRoundObj = rounds.find(r => (typeof r === 'object' ? r.name : r) === editRound) || { type: 'group' };
+                                                                            if (selectedEditRoundObj.type === 'knockout') {
+                                                                                return (
+                                                                                    <select
+                                                                                        value=""
+                                                                                        onChange={e => {
+                                                                                            if (e.target.value) {
+                                                                                                const { text, dep } = parseQuickOriginValue(e.target.value);
+                                                                                                setEditTeam1Text(text);
+                                                                                                setEditTeam1Dep(dep);
+                                                                                                setEditTeam1('');
+                                                                                            }
+                                                                                        }}
+                                                                                        style={{ flex: 1, minWidth: '140px', background: '#f0fdf4', border: '1.5px solid #22c55e' }}
+                                                                                    >
+                                                                                        <option value="">-- Quick Origin --</option>
+                                                                                        <optgroup label="Standings Rank">
+                                                                                            {teams.map((_, index) => {
+                                                                                                const pos = index + 1;
+                                                                                                return (
+                                                                                                    <option key={pos} value={`regular_season_rank:${pos}`}>
+                                                                                                        {pos === 1 ? '1st' : pos === 2 ? '2nd' : pos === 3 ? '3rd' : `${pos}th`} in Regular Season
+                                                                                                    </option>
+                                                                                                );
+                                                                                            })}
+                                                                                        </optgroup>
+                                                                                        {groups.length > 0 && (
+                                                                                            <optgroup label="Group Standings Rank">
+                                                                                                {groups.flatMap(g => [
+                                                                                                    <option key={`1st-${g}`} value={`group_rank:${g}:1`}>1st in Group {g}</option>,
+                                                                                                    <option key={`2nd-${g}`} value={`group_rank:${g}:2`}>2nd in Group {g}</option>,
+                                                                                                    <option key={`3rd-${g}`} value={`group_rank:${g}:3`}>3rd in Group {g}</option>,
+                                                                                                    <option key={`4th-${g}`} value={`group_rank:${g}:4`}>4th in Group {g}</option>
+                                                                                                ])}
+                                                                                            </optgroup>
+                                                                                        )}
+                                                                                        <optgroup label="Match Winners / Losers">
+                                                                                            {matches
+                                                                                                .filter(matchItem => {
+                                                                                                    const rObj = rounds.find(r => (typeof r === 'object' ? r.name : r) === matchItem.round);
+                                                                                                    return rObj && rObj.type === 'knockout' && matchItem.id !== editingId;
+                                                                                                })
+                                                                                                .map(matchItem => {
+                                                                                                    const name = getMatchIdentifier(matchItem);
+                                                                                                    return (
+                                                                                                        <React.Fragment key={matchItem.id}>
+                                                                                                            <option value={`winner:${matchItem.id}`}>Winner of {name}</option>
+                                                                                                            <option value={`loser:${matchItem.id}`}>Loser of {name}</option>
+                                                                                                        </React.Fragment>
+                                                                                                    );
+                                                                                                })
+                                                                                            }
+                                                                                        </optgroup>
+                                                                                    </select>
+                                                                                );
+                                                                            }
+                                                                            return null;
+                                                                        })()}
                                                                     </div>
                                                                 </div>
 
                                                                 <div>
-                                                                    <label className="text-xs font-bold block mb-1">Team
-                                                                        2</label>
-                                                                    <div className="flex-gap">
+                                                                    <label className="text-xs font-bold block mb-1">Team 2</label>
+                                                                    <div className="flex-gap" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                                                         <select
                                                                             value={editTeam2}
                                                                             onChange={e => {
                                                                                 setEditTeam2(e.target.value);
                                                                                 setEditTeam2Text('');
+                                                                                setEditTeam2Dep(null);
                                                                             }}
+                                                                            disabled={!!editTeam2Dep}
+                                                                            style={{ flex: 1, minWidth: '120px' }}
                                                                         >
                                                                             <option value="">-- Choose Team --</option>
                                                                             {teams.map(t => <option key={t.id}
                                                                                                     value={t.id}>{t.name}</option>)}
                                                                         </select>
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder="Or placeholder name"
-                                                                            value={editTeam2Text}
-                                                                            onChange={e => {
-                                                                                setEditTeam2Text(e.target.value);
-                                                                                setEditTeam2('');
-                                                                            }}
-                                                                        />
+                                                                        {editTeam2Dep ? (
+                                                                            <div style={{
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '6px',
+                                                                                padding: '4px 12px',
+                                                                                background: '#dcfce7',
+                                                                                border: '1px solid #86efac',
+                                                                                borderRadius: '6px',
+                                                                                color: '#166534',
+                                                                                fontSize: '14px',
+                                                                                fontWeight: '500',
+                                                                                flex: 1,
+                                                                                minWidth: '150px'
+                                                                            }}>
+                                                                                <span>{editTeam2Text}</span>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setEditTeam2Dep(null);
+                                                                                        setEditTeam2Text('');
+                                                                                    }}
+                                                                                    style={{
+                                                                                        background: 'none',
+                                                                                        border: 'none',
+                                                                                        color: '#15803d',
+                                                                                        cursor: 'pointer',
+                                                                                        fontWeight: 'bold',
+                                                                                        marginLeft: 'auto',
+                                                                                        padding: '0 4px'
+                                                                                    }}
+                                                                                    title="Clear origin dependency"
+                                                                                >
+                                                                                    ✕ Clear
+                                                                                </button>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="Or placeholder name"
+                                                                                value={editTeam2Text}
+                                                                                onChange={e => {
+                                                                                    setEditTeam2Text(e.target.value);
+                                                                                    setEditTeam2Dep(null);
+                                                                                    setEditTeam2('');
+                                                                                }}
+                                                                                style={{ flex: 1, minWidth: '150px' }}
+                                                                            />
+                                                                        )}
+                                                                        {(() => {
+                                                                            const selectedEditRoundObj = rounds.find(r => (typeof r === 'object' ? r.name : r) === editRound) || { type: 'group' };
+                                                                            if (selectedEditRoundObj.type === 'knockout') {
+                                                                                return (
+                                                                                    <select
+                                                                                        value=""
+                                                                                        onChange={e => {
+                                                                                            if (e.target.value) {
+                                                                                                const { text, dep } = parseQuickOriginValue(e.target.value);
+                                                                                                setEditTeam2Text(text);
+                                                                                                setEditTeam2Dep(dep);
+                                                                                                setEditTeam2('');
+                                                                                            }
+                                                                                        }}
+                                                                                        style={{ flex: 1, minWidth: '140px', background: '#f0fdf4', border: '1.5px solid #22c55e' }}
+                                                                                    >
+                                                                                        <option value="">-- Quick Origin --</option>
+                                                                                        <optgroup label="Standings Rank">
+                                                                                            {teams.map((_, index) => {
+                                                                                                const pos = index + 1;
+                                                                                                return (
+                                                                                                    <option key={pos} value={`regular_season_rank:${pos}`}>
+                                                                                                        {pos === 1 ? '1st' : pos === 2 ? '2nd' : pos === 3 ? '3rd' : `${pos}th`} in Regular Season
+                                                                                                    </option>
+                                                                                                );
+                                                                                            })}
+                                                                                        </optgroup>
+                                                                                        {groups.length > 0 && (
+                                                                                            <optgroup label="Group Standings Rank">
+                                                                                                {groups.flatMap(g => [
+                                                                                                    <option key={`1st-${g}`} value={`group_rank:${g}:1`}>1st in Group {g}</option>,
+                                                                                                    <option key={`2nd-${g}`} value={`group_rank:${g}:2`}>2nd in Group {g}</option>,
+                                                                                                    <option key={`3rd-${g}`} value={`group_rank:${g}:3`}>3rd in Group {g}</option>,
+                                                                                                    <option key={`4th-${g}`} value={`group_rank:${g}:4`}>4th in Group {g}</option>
+                                                                                                ])}
+                                                                                            </optgroup>
+                                                                                        )}
+                                                                                        <optgroup label="Match Winners / Losers">
+                                                                                            {matches
+                                                                                                .filter(matchItem => {
+                                                                                                    const rObj = rounds.find(r => (typeof r === 'object' ? r.name : r) === matchItem.round);
+                                                                                                    return rObj && rObj.type === 'knockout' && matchItem.id !== editingId;
+                                                                                                })
+                                                                                                .map(matchItem => {
+                                                                                                    const name = getMatchIdentifier(matchItem);
+                                                                                                    return (
+                                                                                                        <React.Fragment key={matchItem.id}>
+                                                                                                            <option value={`winner:${matchItem.id}`}>Winner of {name}</option>
+                                                                                                            <option value={`loser:${matchItem.id}`}>Loser of {name}</option>
+                                                                                                        </React.Fragment>
+                                                                                                    );
+                                                                                                })
+                                                                                            }
+                                                                                        </optgroup>
+                                                                                    </select>
+                                                                                );
+                                                                            }
+                                                                            return null;
+                                                                        })()}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -423,7 +1051,7 @@ function MatchEditor({
                                                                 {/* Team 1 Scorers */}
                                                                 <div>
                                 <span className="text-xs font-bold text-green block mb-1">
-                                  {getTeamName(editTeam1, editTeam1Text || 'Team 1')} Goals ({editScorers1.length})
+                                  {getMatchDisplayTeamName(editTeam1, editTeam1Text, editTeam1Dep)} Goals ({editScorers1.length})
                                 </span>
                                                                     <div className="flex-gap mb-2"
                                                                          style={{alignItems: 'center'}}>
@@ -581,7 +1209,7 @@ function MatchEditor({
                                                                 {/* Team 2 Scorers */}
                                                                 <div>
                                 <span className="text-xs font-bold text-green block mb-1">
-                                  {getTeamName(editTeam2, editTeam2Text || 'Team 2')} Goals ({editScorers2.length})
+                                  {getMatchDisplayTeamName(editTeam2, editTeam2Text, editTeam2Dep)} Goals ({editScorers2.length})
                                 </span>
                                                                     <div className="flex-gap mb-2"
                                                                          style={{alignItems: 'center'}}>
@@ -790,7 +1418,7 @@ function MatchEditor({
                                                 <td className="text-xs font-bold text-green"
                                                     style={{borderBottom: hasScorers ? 'none' : undefined}}>{m.round}</td>
                                                 <td className="text-right font-bold"
-                                                    style={{borderBottom: hasScorers ? 'none' : undefined}}>{getTeamName(m.team1, m.team1Text)}</td>
+                                                    style={{borderBottom: hasScorers ? 'none' : undefined}}>{getMatchDisplayTeamName(m.team1, m.team1Text, m.team1Dep)}</td>
                                                 <td style={{
                                                     whiteSpace: 'nowrap',
                                                     width: '120px',
@@ -804,7 +1432,7 @@ function MatchEditor({
                                                     )}
                                                 </td>
                                                 <td className="text-left font-bold"
-                                                    style={{borderBottom: hasScorers ? 'none' : undefined}}>{getTeamName(m.team2, m.team2Text)}</td>
+                                                    style={{borderBottom: hasScorers ? 'none' : undefined}}>{getMatchDisplayTeamName(m.team2, m.team2Text, m.team2Dep)}</td>
                                                 <td style={{borderBottom: hasScorers ? 'none' : undefined}}>
                                                     <div className="scorer-admin-btns" style={{
                                                         display: 'flex',
