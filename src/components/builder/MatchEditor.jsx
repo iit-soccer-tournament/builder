@@ -115,18 +115,16 @@ function MatchEditor({
         if (dep && typeof dep === 'object') {
             if (dep.type === 'regular_season_rank') {
                 const rank = dep.rank;
-                if (isGroupCompleted() && standings && standings[rank - 1]) {
+                if (standings && standings[rank - 1]) {
                     return standings[rank - 1];
                 }
             }
             if (dep.type === 'group_rank') {
                 const rank = dep.rank;
                 const groupLetter = (dep.groupId || '').trim().toLowerCase();
-                if (isGroupCompleted(groupLetter)) {
-                    const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
-                    if (groupTeams[rank - 1]) {
-                        return groupTeams[rank - 1];
-                    }
+                const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
+                if (groupTeams[rank - 1]) {
+                    return groupTeams[rank - 1];
                 }
             }
             if (dep.type === 'match_winner' || dep.type === 'match_loser') {
@@ -184,18 +182,16 @@ function MatchEditor({
         if (matchGroup) {
             const rank = parseInt(matchGroup[1], 10);
             const groupLetter = matchGroup[2].trim().toLowerCase();
-            if (isGroupCompleted(groupLetter)) {
-                const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
-                if (groupTeams[rank - 1]) {
-                    return groupTeams[rank - 1];
-                }
+            const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
+            if (groupTeams[rank - 1]) {
+                return groupTeams[rank - 1];
             }
         }
 
         const matchRegular = cleanText.match(regularRankRegex);
         if (matchRegular) {
             const rank = parseInt(matchRegular[1], 10);
-            if (isGroupCompleted() && standings[rank - 1]) {
+            if (standings && standings[rank - 1]) {
                 return standings[rank - 1];
             }
         }

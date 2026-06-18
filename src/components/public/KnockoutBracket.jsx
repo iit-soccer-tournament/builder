@@ -59,8 +59,9 @@ function BracketMatchCard({ match, getResolvedTeamInfo, compact = false, isFinal
     fontWeight: isWinner ? 800 : 600,
     maxWidth: `${nameMaxWidth}px`,
     overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    maskImage: 'linear-gradient(to right, black 75%, transparent 100%)',
+    WebkitMaskImage: 'linear-gradient(to right, black 75%, transparent 100%)'
   });
 
   return (
