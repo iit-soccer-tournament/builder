@@ -311,6 +311,19 @@ function PublicFixtures({
     return { name: 'TBD', color: '#718096', id: null };
   };
 
+  const getMatchDisplayTeamName = (teamId, text, dep) => {
+    const resolved = getResolvedTeamInfo(teamId, text, dep);
+    if (teamId) {
+      return resolved.name;
+    }
+    return resolved.name !== (text || 'TBD') ? resolved.name : (text || 'TBD');
+  };
+
+  const getMatchDisplayTeamColor = (teamId, text, dep) => {
+    const resolved = getResolvedTeamInfo(teamId, text, dep);
+    return resolved.color || '#718096';
+  };
+
   const renderBracket = (stages, isCompact = true) => (
     <KnockoutBracket
       compact={isCompact}
@@ -600,8 +613,8 @@ function PublicFixtures({
                               </div>
                               <div className="match-teams-score">
                                 <div className="team-row left-align">
-                                  <span className="team-color" style={{ backgroundColor: getTeamColor(match.team1) }}></span>
-                                  <span className="name">{getTeamName(match.team1, match.team1Text)}</span>
+                                  <span className="team-color" style={{ backgroundColor: getMatchDisplayTeamColor(match.team1, match.team1Text, match.team1Dep) }}></span>
+                                  <span className="name">{getMatchDisplayTeamName(match.team1, match.team1Text, match.team1Dep)}</span>
                                 </div>
                                 
                                 <div className="score-display">
@@ -613,8 +626,8 @@ function PublicFixtures({
                                 </div>
 
                                 <div className="team-row right-align">
-                                  <span className="name">{getTeamName(match.team2, match.team2Text)}</span>
-                                  <span className="team-color" style={{ backgroundColor: getTeamColor(match.team2) }}></span>
+                                  <span className="name">{getMatchDisplayTeamName(match.team2, match.team2Text, match.team2Dep)}</span>
+                                  <span className="team-color" style={{ backgroundColor: getMatchDisplayTeamColor(match.team2, match.team2Text, match.team2Dep) }}></span>
                                 </div>
                               </div>
                               {renderMatchScorers(match)}

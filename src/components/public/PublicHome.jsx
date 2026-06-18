@@ -287,6 +287,14 @@ function PublicHome({ edition, getTeamName, fieldInfo, standings = [] }) {
     return { name: 'TBD', color: '#718096', id: null };
   };
 
+  const getMatchDisplayTeamName = (teamId, text, dep) => {
+    const resolved = getResolvedTeamInfo(teamId, text, dep);
+    if (teamId) {
+      return resolved.name;
+    }
+    return resolved.name !== (text || 'TBD') ? resolved.name : (text || 'TBD');
+  };
+
   const renderBracket = (stages) => (
     <KnockoutBracket
       getResolvedTeamInfo={getResolvedTeamInfo}
@@ -333,9 +341,9 @@ function PublicHome({ edition, getTeamName, fieldInfo, standings = [] }) {
                     <div key={m.id} className="quick-match-row scheduled">
                       <div className="qm-meta">Upcoming • {formatDateReadable(m.date, m.dateSuffix)} {m.time} (Pitch {m.pitch})</div>
                       <div className="qm-teams">
-                        <span className="team-name text-right">{getTeamName(m.team1, m.team1Text)}</span>
+                        <span className="team-name text-right">{getMatchDisplayTeamName(m.team1, m.team1Text, m.team1Dep)}</span>
                         <span className="vs-badge">vs</span>
-                        <span className="team-name text-left">{getTeamName(m.team2, m.team2Text)}</span>
+                        <span className="team-name text-left">{getMatchDisplayTeamName(m.team2, m.team2Text, m.team2Dep)}</span>
                       </div>
                     </div>
                   ))}
@@ -391,9 +399,9 @@ function PublicHome({ edition, getTeamName, fieldInfo, standings = [] }) {
                       <div key={m.id} className="quick-match-row played" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div className="qm-meta" style={{ alignSelf: 'flex-start' }}>Recent • Pitch {m.pitch}</div>
                         <div className="qm-teams">
-                          <span className="team-name text-right">{getTeamName(m.team1, m.team1Text)}</span>
+                          <span className="team-name text-right">{getMatchDisplayTeamName(m.team1, m.team1Text, m.team1Dep)}</span>
                           <span className="score-badge">{m.score1} - {m.score2}</span>
-                          <span className="team-name text-left">{getTeamName(m.team2, m.team2Text)}</span>
+                          <span className="team-name text-left">{getMatchDisplayTeamName(m.team2, m.team2Text, m.team2Dep)}</span>
                         </div>
                         {renderHomeMatchScorers(m)}
                       </div>
