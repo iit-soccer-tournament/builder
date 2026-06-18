@@ -1150,6 +1150,7 @@ function BuilderMain({
         {/* TAB 3: MATCHES SCHEDULER */}
         {activeBuilderTab === 'matches' && (
           <MatchEditor 
+            year={currentEdition.year}
             matches={currentEdition.matches}
             teams={currentEdition.teams}
             scorers={currentEdition.scorers || []}

@@ -90,10 +90,73 @@ const ensureSeasonMetadata = (season) => {
     }
   });
 
+  const migratedMatches = matches.map(m => {
+    const rawDate = String(m.date || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      return m;
+    }
+
+    let datePart = rawDate;
+    let suffix = m.dateSuffix || '';
+
+    if (rawDate.includes(' - ')) {
+      const parts = rawDate.split(' - ');
+      datePart = parts[0].trim();
+      suffix = parts.slice(1).join(' - ').trim();
+    }
+
+    const monthNames = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+    const lower = datePart.toLowerCase();
+    let foundMonthIdx = -1;
+    let foundMonthName = "";
+    for (let i = 0; i < monthNames.length; i++) {
+      if (lower.includes(monthNames[i])) {
+        foundMonthIdx = i;
+        foundMonthName = monthNames[i];
+        break;
+      }
+    }
+
+    let yyyyMmDd = '';
+    if (foundMonthIdx !== -1) {
+      const afterMonth = lower.split(foundMonthName)[1] || "";
+      const beforeMonth = lower.split(foundMonthName)[0] || "";
+      const dayMatch = afterMonth.match(/\d+/) || beforeMonth.match(/\d+/);
+      if (dayMatch) {
+        const dayVal = parseInt(dayMatch[0], 10);
+        if (dayVal >= 1 && dayVal <= 31) {
+          const mm = String(foundMonthIdx + 1).padStart(2, '0');
+          const dd = String(dayVal).padStart(2, '0');
+          const yyyy = String(season.year || new Date().getFullYear());
+          yyyyMmDd = `${yyyy}-${mm}-${dd}`;
+        }
+      }
+    }
+
+    if (!yyyyMmDd) {
+      const yyyy = String(season.year || new Date().getFullYear());
+      yyyyMmDd = `${yyyy}-01-01`;
+      if (rawDate) {
+        if (!suffix) {
+          suffix = rawDate;
+        } else {
+          suffix = `${rawDate} (${suffix})`;
+        }
+      }
+    }
+
+    return {
+      ...m,
+      date: yyyyMmDd,
+      dateSuffix: suffix || undefined
+    };
+  });
+
   return {
     ...season,
     pitches: finalPitches,
-    rounds: migratedRounds
+    rounds: migratedRounds,
+    matches: migratedMatches
   };
 };
 

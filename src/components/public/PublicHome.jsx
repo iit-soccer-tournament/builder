@@ -1,11 +1,11 @@
 import { MapPin } from 'lucide-react';
 import KnockoutBracket from './KnockoutBracket';
+import { formatDateReadable } from '../../dateUtils';
 
 function PublicHome({ edition, getTeamName, fieldInfo, standings = [] }) {
   const parseDateSafe = (dateStr) => {
     if (!dateStr) return new Date(0);
-    const cleanDate = dateStr.split(',')[0].trim();
-    const parsed = new Date(`${cleanDate}, ${edition.year}`);
+    const parsed = new Date(dateStr);
     return isNaN(parsed) ? new Date(0) : parsed;
   };
 
@@ -309,7 +309,7 @@ function PublicHome({ edition, getTeamName, fieldInfo, standings = [] }) {
                 <>
                   {upcomingScheduled.map(m => (
                     <div key={m.id} className="quick-match-row scheduled">
-                      <div className="qm-meta">Upcoming • {m.date} {m.time} (Pitch {m.pitch})</div>
+                      <div className="qm-meta">Upcoming • {formatDateReadable(m.date, m.dateSuffix)} {m.time} (Pitch {m.pitch})</div>
                       <div className="qm-teams">
                         <span className="team-name text-right">{getTeamName(m.team1, m.team1Text)}</span>
                         <span className="vs-badge">vs</span>

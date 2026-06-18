@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, ChevronDown, ChevronRight } from 'lucide-react';
 import KnockoutBracket from './KnockoutBracket';
+import { formatDateReadable } from '../../dateUtils';
 
 function PublicFixtures({ 
   edition, 
@@ -20,11 +21,10 @@ function PublicFixtures({
       filtered = filtered.filter(m => m.team1 === selectedTeamFilter || m.team2 === selectedTeamFilter);
     }
 
-    // Helper to safely parse date string without weekday suffix (e.g., "May 26, Tuesday" -> "May 26")
+    // Helper to safely parse date string
     const parseDateSafe = (dateStr) => {
       if (!dateStr) return new Date(0);
-      const cleanDate = dateStr.split(',')[0].trim();
-      const parsed = new Date(`${cleanDate}, ${edition.year}`);
+      const parsed = new Date(dateStr);
       return isNaN(parsed) ? new Date(0) : parsed;
     };
 
@@ -516,7 +516,7 @@ function PublicFixtures({
                         userSelect: 'none'
                       }}
                     >
-                      <span>{date}</span>
+                      <span>{formatDateReadable(date, groupedMatches[date][0]?.dateSuffix)}</span>
                       {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                     </h3>
                     

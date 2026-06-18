@@ -1,7 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import {Plus, Trash2, Check, X, Calendar, Trophy} from 'lucide-react';
+import { formatDateReadable, parseToYyyyMmDd } from '../../dateUtils';
 
 function MatchEditor({
+    year = new Date().getFullYear(),
     matches = [],
     teams = [],
     scorers = [],
@@ -33,6 +35,7 @@ function MatchEditor({
 
     // Edit Form states
     const [editDate, setEditDate] = useState('');
+    const [editDateSuffix, setEditDateSuffix] = useState('');
     const [editTime, setEditTime] = useState('');
     const [editPitch, setEditPitch] = useState(pitches[0] || 'C');
     const [editRound, setEditRound] = useState(firstRoundName);
@@ -276,6 +279,7 @@ function MatchEditor({
 
     const [newMatch, setNewMatch] = useState({
         date: '',
+        dateSuffix: '',
         time: '19:00',
         pitch: pitches[0] || 'C',
         team1: '',
@@ -331,10 +335,15 @@ function MatchEditor({
     const handleCreate = (e) => {
         e.preventDefault();
         if ((!newMatch.team1 && !newMatch.team1Text) || (!newMatch.team2 && !newMatch.team2Text)) return;
-        onAddMatch(newMatch);
+        const parsedDate = parseToYyyyMmDd(newMatch.date, year);
+        onAddMatch({
+            ...newMatch,
+            date: parsedDate
+        });
         // Reset form fields
         setNewMatch({
             date: '',
+            dateSuffix: '',
             time: '19:00',
             pitch: pitches[0] || 'C',
             team1: '',
@@ -351,6 +360,7 @@ function MatchEditor({
         setEditingId(m.id);
         setEditType(type);
         setEditDate(m.date || '');
+        setEditDateSuffix(m.dateSuffix || '');
         setEditTime(m.time || '19:00');
         setEditPitch(m.pitch || pitches[0] || 'C');
         setEditRound(m.round || rounds[0] || 'Regular Season');
@@ -391,8 +401,10 @@ function MatchEditor({
 
     const saveEdit = (id) => {
         if (editType === 'info') {
+            const parsedDate = parseToYyyyMmDd(editDate, year);
             onSaveMatch(id, {
-                date: editDate,
+                date: parsedDate,
+                dateSuffix: editDateSuffix,
                 time: editTime,
                 pitch: editPitch,
                 round: editRound,
@@ -429,12 +441,34 @@ function MatchEditor({
                     <div className="form-grid">
                         <div>
                             <label>Date</label>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                                <input
+                                    type="text"
+                                    value={newMatch.date}
+                                    onChange={(e) => setNewMatch({...newMatch, date: e.target.value})}
+                                    placeholder="e.g. 2026-06-03 or June 3"
+                                    required
+                                    style={{ flex: 1 }}
+                                />
+                                <input
+                                    type="date"
+                                    onChange={(e) => {
+                                        if (e.target.value) {
+                                            setNewMatch({...newMatch, date: e.target.value});
+                                        }
+                                    }}
+                                    style={{ width: '38px', padding: '0', cursor: 'pointer', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                    title="Optional datepicker selector"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label>Date Suffix (Optional)</label>
                             <input
                                 type="text"
-                                value={newMatch.date}
-                                onChange={(e) => setNewMatch({...newMatch, date: e.target.value})}
-                                placeholder="e.g. June 3, Wednesday"
-                                required
+                                value={newMatch.dateSuffix || ''}
+                                onChange={(e) => setNewMatch({...newMatch, dateSuffix: e.target.value})}
+                                placeholder="e.g. Finals, Playout"
                             />
                         </div>
                         <div>
@@ -734,11 +768,34 @@ function MatchEditor({
                                                                 <div>
                                                                     <label
                                                                         className="text-xs font-bold block mb-1">Date</label>
+                                                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={editDate}
+                                                                            onChange={e => setEditDate(e.target.value)}
+                                                                            placeholder="Date (e.g. 2026-05-26)"
+                                                                            style={{ flex: 1 }}
+                                                                        />
+                                                                        <input
+                                                                            type="date"
+                                                                            onChange={e => {
+                                                                                if (e.target.value) {
+                                                                                    setEditDate(e.target.value);
+                                                                                }
+                                                                            }}
+                                                                            style={{ width: '38px', padding: '0', cursor: 'pointer', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                                                            title="Optional datepicker selector"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <label
+                                                                        className="text-xs font-bold block mb-1">Date Suffix (Optional)</label>
                                                                     <input
                                                                         type="text"
-                                                                        value={editDate}
-                                                                        onChange={e => setEditDate(e.target.value)}
-                                                                        placeholder="Date (e.g. May 26, Tuesday)"
+                                                                        value={editDateSuffix}
+                                                                        onChange={e => setEditDateSuffix(e.target.value)}
+                                                                        placeholder="e.g. Finals"
                                                                     />
                                                                 </div>
                                                                 <div>
@@ -1412,7 +1469,7 @@ function MatchEditor({
                                             <>
                                                 <td className="text-xs"
                                                     style={{borderBottom: hasScorers ? 'none' : undefined}}>
-                                                    <div className="font-bold">{m.date}</div>
+                                                    <div className="font-bold">{formatDateReadable(m.date, m.dateSuffix)}</div>
                                                     <div className="text-muted">Pitch {m.pitch} • {m.time}</div>
                                                 </td>
                                                 <td className="text-xs font-bold text-green"
