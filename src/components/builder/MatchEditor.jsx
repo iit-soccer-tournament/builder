@@ -94,10 +94,31 @@ function MatchEditor({
     const resolveTeamPlaceholder = (text, dep) => {
         // Helper to check if all group stage matches (regular season/group rounds) are played
         const isGroupCompleted = (groupId = null) => {
+            const allRounds = rounds || [];
             const groupMatches = (matches || []).filter(m => {
-                const rObj = (rounds || []).find(r => (typeof r === 'object' ? r.name : r) === m.round);
-                const isGroup = rObj ? rObj.type === 'group' : (m.round === 'Regular Season' || m.round.startsWith('Round '));
+                const roundName = (m.round || '').trim().toLowerCase();
+                
+                // Find round in allRounds case-insensitively
+                const rObj = allRounds.find(r => {
+                    const name = typeof r === 'object' && r !== null ? r.name : r;
+                    return String(name || '').trim().toLowerCase() === roundName;
+                });
+                
+                let isGroup = false;
+                if (rObj) {
+                    if (typeof rObj === 'object') {
+                        isGroup = rObj.type === 'group';
+                    } else {
+                        // If it's a string, use name detection
+                        const lower = rObj.toLowerCase();
+                        isGroup = !(lower.includes('playoff') || lower.includes('playout') || lower.includes('semifinal') || lower.includes('final') || lower.includes('knockout') || lower.includes('quarter'));
+                    }
+                } else {
+                    isGroup = roundName === 'regular season' || roundName.startsWith('round') || roundName.includes('girone') || roundName.includes('group');
+                }
+                
                 if (!isGroup) return false;
+                
                 if (groupId) {
                     const groupLetter = groupId.trim().toLowerCase();
                     const t1Obj = teams.find(t => t.id === m.team1);
@@ -115,16 +136,18 @@ function MatchEditor({
         if (dep && typeof dep === 'object') {
             if (dep.type === 'regular_season_rank') {
                 const rank = dep.rank;
-                if (standings && standings[rank - 1]) {
+                if (isGroupCompleted() && standings && standings[rank - 1]) {
                     return standings[rank - 1];
                 }
             }
             if (dep.type === 'group_rank') {
                 const rank = dep.rank;
                 const groupLetter = (dep.groupId || '').trim().toLowerCase();
-                const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
-                if (groupTeams[rank - 1]) {
-                    return groupTeams[rank - 1];
+                if (isGroupCompleted(groupLetter)) {
+                    const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
+                    if (groupTeams[rank - 1]) {
+                        return groupTeams[rank - 1];
+                    }
                 }
             }
             if (dep.type === 'match_winner' || dep.type === 'match_loser') {
@@ -182,16 +205,18 @@ function MatchEditor({
         if (matchGroup) {
             const rank = parseInt(matchGroup[1], 10);
             const groupLetter = matchGroup[2].trim().toLowerCase();
-            const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
-            if (groupTeams[rank - 1]) {
-                return groupTeams[rank - 1];
+            if (isGroupCompleted(groupLetter)) {
+                const groupTeams = standings.filter(t => t.group && t.group.trim().toLowerCase() === groupLetter);
+                if (groupTeams[rank - 1]) {
+                    return groupTeams[rank - 1];
+                }
             }
         }
 
         const matchRegular = cleanText.match(regularRankRegex);
         if (matchRegular) {
             const rank = parseInt(matchRegular[1], 10);
-            if (standings && standings[rank - 1]) {
+            if (isGroupCompleted() && standings[rank - 1]) {
                 return standings[rank - 1];
             }
         }
