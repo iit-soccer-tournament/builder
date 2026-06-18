@@ -57,11 +57,11 @@ function BracketMatchCard({ match, getResolvedTeamInfo, compact = false, isFinal
     color: '#1e293b',
     fontSize: compact ? '10px' : '12px',
     fontWeight: isWinner ? 800 : 600,
-    maxWidth: `${nameMaxWidth}px`,
     overflow: 'hidden',
     whiteSpace: 'nowrap',
-    maskImage: 'linear-gradient(to right, black 75%, transparent 100%)',
-    WebkitMaskImage: 'linear-gradient(to right, black 75%, transparent 100%)'
+    maskImage: 'linear-gradient(to right, black 80%, transparent 100%)',
+    WebkitMaskImage: 'linear-gradient(to right, black 80%, transparent 100%)',
+    flex: 1
   });
 
   return (
@@ -81,14 +81,14 @@ function BracketMatchCard({ match, getResolvedTeamInfo, compact = false, isFinal
       title={`${match.round}${match.time ? ` - ${match.time}` : ''}${match.pitch ? ` - Pitch ${match.pitch}` : ''}`}
     >
       <div style={rowStyle(team1Winner, true)}>
-        <div style={{ alignItems: 'center', display: 'flex', gap: compact ? '4px' : '6px', minWidth: 0 }}>
+        <div style={{ alignItems: 'center', display: 'flex', gap: compact ? '4px' : '6px', minWidth: 0, flex: 1, marginRight: '8px' }}>
           <span style={{ background: team1Info.color, borderRadius: '50%', flexShrink: 0, height: compact ? '6px' : '7px', width: compact ? '6px' : '7px' }} />
           <span style={nameStyle(team1Winner)}>{team1Info.name}</span>
         </div>
         {isPlayed && <span style={{ color: '#0f172a', fontSize: compact ? '10px' : '12px', fontWeight: team1Winner ? 900 : 600 }}>{match.score1}</span>}
       </div>
       <div style={rowStyle(team2Winner)}>
-        <div style={{ alignItems: 'center', display: 'flex', gap: compact ? '4px' : '6px', minWidth: 0 }}>
+        <div style={{ alignItems: 'center', display: 'flex', gap: compact ? '4px' : '6px', minWidth: 0, flex: 1, marginRight: '8px' }}>
           <span style={{ background: team2Info.color, borderRadius: '50%', flexShrink: 0, height: compact ? '6px' : '7px', width: compact ? '6px' : '7px' }} />
           <span style={nameStyle(team2Winner)}>{team2Info.name}</span>
         </div>
