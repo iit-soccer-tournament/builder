@@ -1618,10 +1618,16 @@ function MatchEditor({
 
             {/* Suggestions datalist */}
             <datalist id="registered-players-list-team1">
-                {scorers.filter(s => s.team === editTeam1).map(s => <option key={s.id} value={s.name}/>)}
+                {scorers.filter(s => {
+                    const resolvedId = getResolvedTeamInfo(editTeam1, editTeam1Text, editTeam1Dep)?.id;
+                    return s.team === editTeam1 || (resolvedId && s.team === resolvedId);
+                }).map(s => <option key={s.id} value={s.name}/>)}
             </datalist>
             <datalist id="registered-players-list-team2">
-                {scorers.filter(s => s.team === editTeam2).map(s => <option key={s.id} value={s.name}/>)}
+                {scorers.filter(s => {
+                    const resolvedId = getResolvedTeamInfo(editTeam2, editTeam2Text, editTeam2Dep)?.id;
+                    return s.team === editTeam2 || (resolvedId && s.team === resolvedId);
+                }).map(s => <option key={s.id} value={s.name}/>)}
             </datalist>
         </div>
     );
