@@ -48,12 +48,35 @@ function MatchEditor({
     const [editStatus, setEditStatus] = useState('scheduled');
     const [editScorers1, setEditScorers1] = useState([]);
     const [editScorers2, setEditScorers2] = useState([]);
+    const [editPenalties1, setEditPenalties1] = useState('');
+    const [editPenalties2, setEditPenalties2] = useState('');
     const [newScorer1, setNewScorer1] = useState('');
     const [newScorer2, setNewScorer2] = useState('');
     const [goalsCount1, setGoalsCount1] = useState(1);
     const [goalsCount2, setGoalsCount2] = useState(1);
     const [scorerGender1, setScorerGender1] = useState('Men');
     const [scorerGender2, setScorerGender2] = useState('Men');
+
+    const isKnockoutRound = (roundName) => {
+        if (!roundName) return false;
+        const lowerName = roundName.trim().toLowerCase();
+        const rObj = (rounds || []).find(r => {
+            const name = typeof r === 'object' && r !== null ? r.name : r;
+            return String(name || '').trim().toLowerCase() === lowerName;
+        });
+        if (rObj && typeof rObj === 'object') {
+            return rObj.type === 'knockout';
+        }
+        return lowerName.includes('playoff') || 
+               lowerName.includes('playout') || 
+               lowerName.includes('semifinal') || 
+               lowerName.includes('semis') || 
+               lowerName.includes('final') || 
+               lowerName.includes('knockout') || 
+               lowerName.includes('quarter') ||
+               lowerName.includes('3rd') ||
+               lowerName.includes('third');
+    };
 
     const getMatchIdentifier = (m) => {
         if (!m || !m.round) return '';
@@ -173,9 +196,24 @@ function MatchEditor({
                     if (s1 > s2) {
                         winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
                         loserId = t2; loserText = t2Text; loserDep = t2Dep;
-                    } else {
+                    } else if (s2 > s1) {
                         winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
                         loserId = t1; loserText = t1Text; loserDep = t1Dep;
+                    } else {
+                        const p1 = parseInt(foundMatch.penalties1, 10);
+                        const p2 = parseInt(foundMatch.penalties2, 10);
+                        if (!isNaN(p1) && !isNaN(p2) && p1 !== p2) {
+                            if (p1 > p2) {
+                                winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
+                                loserId = t2; loserText = t2Text; loserDep = t2Dep;
+                            } else {
+                                winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+                                loserId = t1; loserText = t1Text; loserDep = t1Dep;
+                            }
+                        } else {
+                            winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+                            loserId = t1; loserText = t1Text; loserDep = t1Dep;
+                        }
                     }
 
                     const resolvedId = isWinnerSearch ? winnerId : loserId;
@@ -246,9 +284,24 @@ function MatchEditor({
                 if (s1 > s2) {
                     winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
                     loserId = t2; loserText = t2Text; loserDep = t2Dep;
-                } else {
+                } else if (s2 > s1) {
                     winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
                     loserId = t1; loserText = t1Text; loserDep = t1Dep;
+                } else {
+                    const p1 = parseInt(foundMatch.penalties1, 10);
+                    const p2 = parseInt(foundMatch.penalties2, 10);
+                    if (!isNaN(p1) && !isNaN(p2) && p1 !== p2) {
+                        if (p1 > p2) {
+                            winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
+                            loserId = t2; loserText = t2Text; loserDep = t2Dep;
+                        } else {
+                            winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+                            loserId = t1; loserText = t1Text; loserDep = t1Dep;
+                        }
+                    } else {
+                        winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+                        loserId = t1; loserText = t1Text; loserDep = t1Dep;
+                    }
                 }
 
                 const resolvedId = isWinnerSearch ? winnerId : loserId;
@@ -394,6 +447,8 @@ function MatchEditor({
         setEditStatus(m.status || 'scheduled');
         setEditScorers1(m.scorers1 || []);
         setEditScorers2(m.scorers2 || []);
+        setEditPenalties1(m.penalties1 !== undefined && m.penalties1 !== null ? m.penalties1 : '');
+        setEditPenalties2(m.penalties2 !== undefined && m.penalties2 !== null ? m.penalties2 : '');
         setNewScorer1('');
         setNewScorer2('');
         setGoalsCount1(1);
@@ -437,13 +492,39 @@ function MatchEditor({
                 team2Dep: editTeam2Dep
             });
         } else {
-            const finalStatus = (editScorers1.length > 0 || editScorers2.length > 0) ? 'played' : editStatus;
+            const foundMatch = (matches || []).find(m => m.id === id);
+            const roundName = foundMatch ? foundMatch.round : '';
+            const isKnockout = isKnockoutRound(roundName);
+            const score1 = editScorers1.length;
+            const score2 = editScorers2.length;
+            
+            let p1 = null;
+            let p2 = null;
+            
+            if (isKnockout && score1 === score2) {
+                const val1 = parseInt(editPenalties1, 10);
+                const val2 = parseInt(editPenalties2, 10);
+                if (isNaN(val1) || isNaN(val2)) {
+                    alert("Please enter a valid penalty shootout score since the match ended in a draw.");
+                    return;
+                }
+                if (val1 === val2) {
+                    alert("A penalty shootout cannot end in a draw. Please specify a winner.");
+                    return;
+                }
+                p1 = val1;
+                p2 = val2;
+            }
+
+            const finalStatus = (editScorers1.length > 0 || editScorers2.length > 0 || p1 !== null || p2 !== null) ? 'played' : editStatus;
             onSaveMatch(id, {
                 status: finalStatus,
                 score1: finalStatus === 'played' ? editScorers1.length : null,
                 score2: finalStatus === 'played' ? editScorers2.length : null,
                 scorers1: finalStatus === 'played' ? editScorers1 : [],
-                scorers2: finalStatus === 'played' ? editScorers2 : []
+                scorers2: finalStatus === 'played' ? editScorers2 : [],
+                penalties1: finalStatus === 'played' ? p1 : null,
+                penalties2: finalStatus === 'played' ? p2 : null
             });
         }
         setEditingId(null);
@@ -1443,7 +1524,56 @@ function MatchEditor({
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    )}
+                                                     )}
+
+                                                     {editType === 'results' && isKnockoutRound(m.round) && editScorers1.length === editScorers2.length && (
+                                                         <div className="match-penalties-logging mt-2 p-2"
+                                                              style={{background: '#f1f5f9', borderRadius: '8px', border: '1px solid #cbd5e1'}}>
+                                                             <h5 className="text-xs font-bold mb-1 text-slate-700" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '4px' }}>🏆 Penalty Shootout</h5>
+                                                             <div style={{
+                                                                 display: 'flex',
+                                                                 alignItems: 'center',
+                                                                 gap: '12px',
+                                                                 marginTop: '6px'
+                                                             }}>
+                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                     <span className="text-xs font-bold text-slate-700">{getMatchDisplayTeamName(m.team1, m.team1Text, m.team1Dep)}:</span>
+                                                                     <input
+                                                                         type="number"
+                                                                         min="0"
+                                                                         value={editPenalties1}
+                                                                         onChange={e => setEditPenalties1(e.target.value)}
+                                                                         style={{
+                                                                             padding: '4px 8px',
+                                                                             fontSize: '12px',
+                                                                             width: '60px',
+                                                                             border: '1px solid #cbd5e1',
+                                                                             borderRadius: '4px'
+                                                                         }}
+                                                                         placeholder="Score"
+                                                                     />
+                                                                 </div>
+                                                                 <span className="text-xs font-bold text-slate-400">vs</span>
+                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                     <input
+                                                                         type="number"
+                                                                         min="0"
+                                                                         value={editPenalties2}
+                                                                         onChange={e => setEditPenalties2(e.target.value)}
+                                                                         style={{
+                                                                             padding: '4px 8px',
+                                                                             fontSize: '12px',
+                                                                             width: '60px',
+                                                                             border: '1px solid #cbd5e1',
+                                                                             borderRadius: '4px'
+                                                                         }}
+                                                                         placeholder="Score"
+                                                                     />
+                                                                     <span className="text-xs font-bold text-slate-700">{getMatchDisplayTeamName(m.team2, m.team2Text, m.team2Dep)}:</span>
+                                                                 </div>
+                                                             </div>
+                                                         </div>
+                                                     )}
 
                                                     <div className="flex-gap mt-3 justify-end">
                                                         <button
@@ -1504,7 +1634,14 @@ function MatchEditor({
                                                 }}>
                                                     {m.status === 'played' ? (
                                                         <span className="score-badge"
-                                                              style={{margin: '0 4px'}}>{m.score1} - {m.score2}</span>
+                                                              style={{margin: '0 4px'}}>
+                                                              {m.score1} - {m.score2}
+                                                              {m.penalties1 !== undefined && m.penalties1 !== null && m.penalties2 !== undefined && m.penalties2 !== null && (
+                                                                  <span className="text-muted" style={{ fontSize: '10px', marginLeft: '4px' }}>
+                                                                      ({m.penalties1}-{m.penalties2} p)
+                                                                  </span>
+                                                              )}
+                                                         </span>
                                                     ) : (
                                                         <span className="text-muted text-xs">vs</span>
                                                     )}

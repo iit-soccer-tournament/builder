@@ -177,9 +177,24 @@ function PublicHome({ edition, getTeamName, fieldInfo, standings = [] }) {
           if (s1 > s2) {
             winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
             loserId = t2; loserText = t2Text; loserDep = t2Dep;
-          } else {
+          } else if (s2 > s1) {
             winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
             loserId = t1; loserText = t1Text; loserDep = t1Dep;
+          } else {
+            const p1 = parseInt(foundMatch.penalties1, 10);
+            const p2 = parseInt(foundMatch.penalties2, 10);
+            if (!isNaN(p1) && !isNaN(p2) && p1 !== p2) {
+              if (p1 > p2) {
+                winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
+                loserId = t2; loserText = t2Text; loserDep = t2Dep;
+              } else {
+                winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+                loserId = t1; loserText = t1Text; loserDep = t1Dep;
+              }
+            } else {
+              winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+              loserId = t1; loserText = t1Text; loserDep = t1Dep;
+            }
           }
 
           const resolvedId = isWinnerSearch ? winnerId : loserId;
@@ -250,9 +265,24 @@ function PublicHome({ edition, getTeamName, fieldInfo, standings = [] }) {
         if (s1 > s2) {
           winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
           loserId = t2; loserText = t2Text; loserDep = t2Dep;
-        } else {
+        } else if (s2 > s1) {
           winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
           loserId = t1; loserText = t1Text; loserDep = t1Dep;
+        } else {
+          const p1 = parseInt(foundMatch.penalties1, 10);
+          const p2 = parseInt(foundMatch.penalties2, 10);
+          if (!isNaN(p1) && !isNaN(p2) && p1 !== p2) {
+            if (p1 > p2) {
+              winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
+              loserId = t2; loserText = t2Text; loserDep = t2Dep;
+            } else {
+              winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+              loserId = t1; loserText = t1Text; loserDep = t1Dep;
+            }
+          } else {
+            winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+            loserId = t1; loserText = t1Text; loserDep = t1Dep;
+          }
         }
 
         const resolvedId = isWinnerSearch ? winnerId : loserId;
@@ -400,7 +430,14 @@ function PublicHome({ edition, getTeamName, fieldInfo, standings = [] }) {
                         <div className="qm-meta" style={{ alignSelf: 'flex-start' }}>Recent • Pitch {m.pitch}</div>
                         <div className="qm-teams">
                           <span className="team-name text-right">{getMatchDisplayTeamName(m.team1, m.team1Text, m.team1Dep)}</span>
-                          <span className="score-badge">{m.score1} - {m.score2}</span>
+                          <span className="score-badge">
+                            {m.score1} - {m.score2}
+                            {m.penalties1 !== undefined && m.penalties1 !== null && m.penalties2 !== undefined && m.penalties2 !== null && (
+                              <span style={{ fontSize: '10px', opacity: 0.8, marginLeft: '4px' }}>
+                                ({m.penalties1}-{m.penalties2} p)
+                              </span>
+                            )}
+                          </span>
                           <span className="team-name text-left">{getMatchDisplayTeamName(m.team2, m.team2Text, m.team2Dep)}</span>
                         </div>
                         {renderHomeMatchScorers(m)}

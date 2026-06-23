@@ -20,6 +20,14 @@ function getMatchWinnerInfo(match, getResolvedTeamInfo) {
   const score2 = parseInt(match.score2, 10);
   if (score1 > score2) return getResolvedTeamInfo(match.team1, match.team1Text, match.team1Dep);
   if (score2 > score1) return getResolvedTeamInfo(match.team2, match.team2Text, match.team2Dep);
+  
+  // Tie-breaker: Penalties
+  const p1 = parseInt(match.penalties1, 10);
+  const p2 = parseInt(match.penalties2, 10);
+  if (!isNaN(p1) && !isNaN(p2)) {
+    if (p1 > p2) return getResolvedTeamInfo(match.team1, match.team1Text, match.team1Dep);
+    if (p2 > p1) return getResolvedTeamInfo(match.team2, match.team2Text, match.team2Dep);
+  }
   return null;
 }
 
@@ -37,8 +45,8 @@ function BracketMatchCard({ match, getResolvedTeamInfo, compact = false, isFinal
   const isPlayed = match.status === 'played';
   const score1 = isPlayed ? parseInt(match.score1, 10) : null;
   const score2 = isPlayed ? parseInt(match.score2, 10) : null;
-  const team1Winner = isPlayed && score1 > score2;
-  const team2Winner = isPlayed && score2 > score1;
+  const team1Winner = isPlayed && (score1 > score2 || (score1 === score2 && parseInt(match.penalties1, 10) > parseInt(match.penalties2, 10)));
+  const team2Winner = isPlayed && (score2 > score1 || (score1 === score2 && parseInt(match.penalties2, 10) > parseInt(match.penalties1, 10)));
   const team1Info = getResolvedTeamInfo(match.team1, match.team1Text, match.team1Dep);
   const team2Info = getResolvedTeamInfo(match.team2, match.team2Text, match.team2Dep);
   const nameMaxWidth = compact ? 96 : 130;
@@ -85,14 +93,28 @@ function BracketMatchCard({ match, getResolvedTeamInfo, compact = false, isFinal
           <span style={{ background: team1Info.color, borderRadius: '50%', flexShrink: 0, height: compact ? '6px' : '7px', width: compact ? '6px' : '7px' }} />
           <span style={nameStyle(team1Winner)}>{team1Info.name}</span>
         </div>
-        {isPlayed && <span style={{ color: '#0f172a', fontSize: compact ? '10px' : '12px', fontWeight: team1Winner ? 900 : 600 }}>{match.score1}</span>}
+        {isPlayed && (
+          <span style={{ color: '#0f172a', fontSize: compact ? '10px' : '12px', fontWeight: team1Winner ? 900 : 600 }}>
+            {match.score1}
+            {match.penalties1 !== undefined && match.penalties1 !== null && match.penalties2 !== undefined && match.penalties2 !== null && score1 === score2 && (
+              <span style={{ fontSize: compact ? '8px' : '9px', opacity: 0.6, marginLeft: '3px' }}>({match.penalties1})</span>
+            )}
+          </span>
+        )}
       </div>
       <div style={rowStyle(team2Winner)}>
         <div style={{ alignItems: 'center', display: 'flex', gap: compact ? '4px' : '6px', minWidth: 0, flex: 1, marginRight: '8px' }}>
           <span style={{ background: team2Info.color, borderRadius: '50%', flexShrink: 0, height: compact ? '6px' : '7px', width: compact ? '6px' : '7px' }} />
           <span style={nameStyle(team2Winner)}>{team2Info.name}</span>
         </div>
-        {isPlayed && <span style={{ color: '#0f172a', fontSize: compact ? '10px' : '12px', fontWeight: team2Winner ? 900 : 600 }}>{match.score2}</span>}
+        {isPlayed && (
+          <span style={{ color: '#0f172a', fontSize: compact ? '10px' : '12px', fontWeight: team2Winner ? 900 : 600 }}>
+            {match.score2}
+            {match.penalties1 !== undefined && match.penalties1 !== null && match.penalties2 !== undefined && match.penalties2 !== null && score1 === score2 && (
+              <span style={{ fontSize: compact ? '8px' : '9px', opacity: 0.6, marginLeft: '3px' }}>({match.penalties2})</span>
+            )}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -211,9 +233,14 @@ export default function KnockoutBracket({ stages, getResolvedTeamInfo, compact =
       parentWinnerIsTeam1 = true;
     } else if (score2 > score1) {
       parentWinnerIsTeam1 = false;
+    } else {
+      const p1 = parseInt(parentMatch.penalties1, 10);
+      const p2 = parseInt(parentMatch.penalties2, 10);
+      if (!isNaN(p1) && !isNaN(p2)) {
+        if (p1 > p2) parentWinnerIsTeam1 = true;
+        else if (p2 > p1) parentWinnerIsTeam1 = false;
+      }
     }
-
-    if (parentWinnerIsTeam1 === null) return false;
 
     const wantsWinner = dep.type === 'match_winner';
     const useParentTeam1 = wantsWinner ? parentWinnerIsTeam1 : !parentWinnerIsTeam1;

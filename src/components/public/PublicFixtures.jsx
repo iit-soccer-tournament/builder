@@ -201,9 +201,24 @@ function PublicFixtures({
           if (s1 > s2) {
             winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
             loserId = t2; loserText = t2Text; loserDep = t2Dep;
-          } else {
+          } else if (s2 > s1) {
             winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
             loserId = t1; loserText = t1Text; loserDep = t1Dep;
+          } else {
+            const p1 = parseInt(foundMatch.penalties1, 10);
+            const p2 = parseInt(foundMatch.penalties2, 10);
+            if (!isNaN(p1) && !isNaN(p2) && p1 !== p2) {
+              if (p1 > p2) {
+                winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
+                loserId = t2; loserText = t2Text; loserDep = t2Dep;
+              } else {
+                winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+                loserId = t1; loserText = t1Text; loserDep = t1Dep;
+              }
+            } else {
+              winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+              loserId = t1; loserText = t1Text; loserDep = t1Dep;
+            }
           }
 
           const resolvedId = isWinnerSearch ? winnerId : loserId;
@@ -274,9 +289,24 @@ function PublicFixtures({
         if (s1 > s2) {
           winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
           loserId = t2; loserText = t2Text; loserDep = t2Dep;
-        } else {
+        } else if (s2 > s1) {
           winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
           loserId = t1; loserText = t1Text; loserDep = t1Dep;
+        } else {
+          const p1 = parseInt(foundMatch.penalties1, 10);
+          const p2 = parseInt(foundMatch.penalties2, 10);
+          if (!isNaN(p1) && !isNaN(p2) && p1 !== p2) {
+            if (p1 > p2) {
+              winnerId = t1; winnerText = t1Text; winnerDep = t1Dep;
+              loserId = t2; loserText = t2Text; loserDep = t2Dep;
+            } else {
+              winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+              loserId = t1; loserText = t1Text; loserDep = t1Dep;
+            }
+          } else {
+            winnerId = t2; winnerText = t2Text; winnerDep = t2Dep;
+            loserId = t1; loserText = t1Text; loserDep = t1Dep;
+          }
         }
 
         const resolvedId = isWinnerSearch ? winnerId : loserId;
@@ -619,7 +649,14 @@ function PublicFixtures({
                                 
                                 <div className="score-display">
                                   {match.status === 'played' ? (
-                                    <span className="score font-bold">{match.score1} - {match.score2}</span>
+                                    <span className="score font-bold">
+                                      {match.score1} - {match.score2}
+                                      {match.penalties1 !== undefined && match.penalties1 !== null && match.penalties2 !== undefined && match.penalties2 !== null && (
+                                        <span className="penalties-score text-muted text-xs font-normal ml-1" style={{ fontSize: '0.75rem', fontWeight: 'normal' }}>
+                                          ({match.penalties1}-{match.penalties2} p)
+                                        </span>
+                                      )}
+                                    </span>
                                   ) : (
                                     <span className="score text-muted">vs</span>
                                   )}
